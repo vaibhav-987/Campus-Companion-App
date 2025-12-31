@@ -20,6 +20,7 @@ fun LoadingScreen() {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            //new feature
             // Standard Material 3 Loading Spinner
             CircularProgressIndicator(
                 modifier = Modifier.width(64.dp),
