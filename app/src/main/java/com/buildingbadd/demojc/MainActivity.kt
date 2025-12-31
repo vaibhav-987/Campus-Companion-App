@@ -11,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.rememberNavController
 import com.buildingbadd.demojc.navigation.AppNavGraph
 import com.buildingbadd.demojc.ui.theme.DemoJCTheme
-import com.google.firebase.FirebaseApp
 import com.buildingbadd.demojc.uiscreen.common.LoadingScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
