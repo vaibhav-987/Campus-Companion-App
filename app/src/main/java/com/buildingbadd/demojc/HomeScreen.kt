@@ -29,10 +29,7 @@ fun HomeScreen(navController: NavHostController){
         Column (horizontalAlignment = Alignment.CenterHorizontally ) {
             Text("Welcome to Home Screen", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(24.dp))
-
-
         }
-
     }
     Button(modifier = Modifier.padding(20.dp,25.dp), onClick = {
         Firebase.auth.signOut()
@@ -44,9 +41,6 @@ fun HomeScreen(navController: NavHostController){
     }){
         Text("Logout")
     }
-
-
-
 }
 
 @Preview
