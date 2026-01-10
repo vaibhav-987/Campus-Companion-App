@@ -40,9 +40,9 @@ fun WelcomeScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 🔹 Logo (UPG)
+
             Image(
-                painter = painterResource(id = R.drawable.images),
+                painter = painterResource(id = R.drawable.college),
                 contentDescription = "College Logo",
                 modifier = Modifier.size(90.dp)
             )

@@ -12,12 +12,16 @@ import androidx.navigation.compose.rememberNavController
 import com.buildingbadd.demojc.navigation.AppNavGraph
 import com.buildingbadd.demojc.ui.theme.DemoJCTheme
 import com.buildingbadd.demojc.uiscreen.common.LoadingScreen
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.initialize
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Firebase.initialize(context = this)
+        
 
         setContent {
             DemoJCTheme {

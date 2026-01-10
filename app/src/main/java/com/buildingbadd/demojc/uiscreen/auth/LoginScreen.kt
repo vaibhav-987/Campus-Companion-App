@@ -46,12 +46,12 @@ fun LoginScreen(navController: NavHostController) {
 
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.signin_screen), // <-- Replace with your image name
-            contentDescription = "Background Image",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds // This will crop the image to fill the screen
-        )
+//        Image(
+//            painter = painterResource(id = R.drawable.signin_screen), // <-- Replace with your image name
+//            contentDescription = "Background Image",
+//            modifier = Modifier.fillMaxSize(),
+//            contentScale = ContentScale.FillBounds // This will crop the image to fill the screen
+//        )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("Login", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(24.dp))
