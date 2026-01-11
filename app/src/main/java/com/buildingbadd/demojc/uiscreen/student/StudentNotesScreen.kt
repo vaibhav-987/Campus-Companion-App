@@ -1,87 +1,154 @@
 package com.buildingbadd.demojc.uiscreen.student
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.*
 
-data class NoteItem(
-    val title: String,
-    val subject: String,
-    val type: String, // PDF / PPT
-    val uploadedOn: String
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentNotesScreen() {
+fun StudentNotesScreen(navController: NavHostController) {
 
-    // 🔹 Dummy notes (replace with Firestore later)
-    val notes = listOf(
-        NoteItem("Unit 1 Introduction", "Computer Networks", "PPT", "12 Mar 2025"),
-        NoteItem("Unit 2 Routing", "Computer Networks", "PDF", "18 Mar 2025"),
-        NoteItem("ER Diagram Notes", "DBMS", "PDF", "20 Mar 2025"),
-        NoteItem("Normalization", "DBMS", "PPT", "22 Mar 2025")
-    )
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(40.dp))
+    var notes by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-        Text(
-            text = "Lecture Notes",
-            style = MaterialTheme.typography.headlineMedium
-        )
+    LaunchedEffect(Unit) {
+        try {
+            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // 🔹 Get enrollmentId
+            val userDoc = db.collection("users").document(uid).get().await()
+            val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-        LazyColumn {
-            items(notes) { note ->
-                NoteCard(note)
+            // 🔹 Get student class
+            val studentDoc =
+                db.collection("students_detail").document(enrollmentId).get().await()
+            val studentClass = studentDoc.getString("class") ?: return@LaunchedEffect
+
+            // 🔹 Fetch notes for class
+            val snapshot = db.collection("notes")
+                .whereEqualTo("class", studentClass)
+                .get()
+                .await()
+
+            notes = snapshot.documents.mapNotNull { it.data }
+
+        } finally {
+            isLoading = false
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Notes") })
+        }
+    ) { padding ->
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                notes.isEmpty() -> {
+                    Text(
+                        "No notes available",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                else -> {
+                    LazyColumn {
+                        items(notes) { note ->
+                            StudentNoteCard(note, context)
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+
 @Composable
-fun NoteCard(note: NoteItem) {
+fun StudentNoteCard(
+    note: Map<String, Any>,
+    context: android.content.Context
+) {
+    val title = note["title"] as? String ?: ""
+    val subject = note["subjectName"] as? String ?: ""
+    val fileUrl = note["fileUrl"] as? String ?: ""
+    val uploadedAt = note["uploadedAt"] as? Long ?: 0L
+
+    val formattedDate =
+        if (uploadedAt != 0L)
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                .format(Date(uploadedAt))
+        else
+            ""
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(vertical = 8.dp)
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(fileUrl))
+                context.startActivity(intent)
+            },
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
-
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
 
             Text(
-                text = note.title,
+                text = title,
                 style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text("Subject: ${note.subject}")
-            Text("Type: ${note.type}")
-            Text("Uploaded on: ${note.uploadedOn}")
+            Text("Subject: $subject")
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    // Later: open PDF/PPT from Firebase Storage
-                }
-            ) {
-                Text("View")
+            if (formattedDate.isNotEmpty()) {
+                Text(
+                    "Uploaded on: $formattedDate",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                "Tap to download",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelMedium
+            )
         }
     }
 }

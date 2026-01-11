@@ -1,5 +1,6 @@
 package com.buildingbadd.demojc.uiscreen.student
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -43,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.buildingbadd.demojc.R
+import com.buildingbadd.demojc.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -53,6 +55,7 @@ fun StudentDashboard(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
+    val context = LocalContext.current
     var userName by remember { mutableStateOf("Student") }
     var userRole by remember { mutableStateOf("student") }
 
@@ -77,7 +80,7 @@ fun StudentDashboard(navController: NavHostController) {
         DashboardItem(
             title = "Notes",
             iconRes = R.drawable.ic_notes,
-            onClick = { navController.navigate("student_notes") }
+            onClick = { navController.navigate("student_subjects") }
         ),
         DashboardItem(
             title = "Assignments",
@@ -87,38 +90,38 @@ fun StudentDashboard(navController: NavHostController) {
         DashboardItem(
             title = "Reports",
             iconRes = R.drawable.ic_report,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         ),
         DashboardItem(
             title = "Feedback",
             iconRes = R.drawable.ic_feedback,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         ),
         DashboardItem(
             title = "My Courses",
             iconRes = R.drawable.ic_courses,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         ),
         DashboardItem(
             title = "Library",
             iconRes = R.drawable.ic_library,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         ),
         DashboardItem(
             title = "Test",
             iconRes = R.drawable.ic_test,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         ),
 
         DashboardItem(
             title = "Announcements",
             iconRes = R.drawable.ic_announcement,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         ),
         DashboardItem(
             title = "Resources",
             iconRes = R.drawable.ic_resources,
-            onClick = { navController.navigate("student_reports") }
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         )
     )
 

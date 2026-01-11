@@ -27,7 +27,9 @@ import com.buildingbadd.demojc.uiscreen.faculty.FacultyUploadNotesScreen
 import com.buildingbadd.demojc.uiscreen.student.AssignmentDetailScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceOverviewScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceHistoryScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentNotesBySubjectScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentProfileScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentSubjectsScreen
 import com.buildingbadd.demojc.uiscreen.welcome.WelcomeScreen
 
 // 1. Create a top-level Composable function to hold the graph
@@ -77,7 +79,7 @@ fun AppNavGraph(
         }
 
         composable(Routes.STUDENT_NOTES) {
-            StudentNotesScreen()
+            StudentNotesScreen(navController)
         }
 
         composable(Routes.STUDENT_ASSIGNMENTS) {
@@ -116,6 +118,20 @@ fun AppNavGraph(
         ) {
             AssignmentDetailScreen(navController)
         }
+
+        composable("student_subjects") {
+            StudentSubjectsScreen(navController)
+        }
+
+        composable(
+            route = "student_notes/{subjectId}"
+        ) {
+            StudentNotesBySubjectScreen(
+                navController,
+                it.arguments?.getString("subjectId")!!
+            )
+        }
+
 
         /* ---------------- FACULTY ---------------- */
 
