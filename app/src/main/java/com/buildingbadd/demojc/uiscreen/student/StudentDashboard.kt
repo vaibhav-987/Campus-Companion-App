@@ -154,6 +154,9 @@ fun StudentDashboard(navController: NavHostController) {
                     }
                 }
             )
+        },
+        bottomBar = {
+            StudentBottomNavBar(navController)
         }
     ) { paddingValues ->
 

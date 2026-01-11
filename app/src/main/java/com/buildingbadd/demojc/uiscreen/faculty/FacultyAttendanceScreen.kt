@@ -95,6 +95,9 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Take Attendance") })
+        },
+        bottomBar = {
+            FacultyBottomNavBar(navController)
         }
     ) { padding ->
 

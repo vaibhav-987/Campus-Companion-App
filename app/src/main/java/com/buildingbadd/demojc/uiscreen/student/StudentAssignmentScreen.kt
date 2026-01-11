@@ -1,90 +1,191 @@
 package com.buildingbadd.demojc.uiscreen.student
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.navigation.Routes
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
-data class AssignmentItem(
-    val title: String,
-    val subject: String,
-    val dueDate: String,
-    val status: String // Pending / Submitted / Late
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentAssignmentsScreen() {
+fun StudentAssignmentsScreen(navController: NavHostController) {
 
-    // 🔹 Dummy data (replace with Firestore later)
-    val assignments = listOf(
-        AssignmentItem("Assignment 1", "Computer Networks", "25 Mar 2025", "Pending"),
-        AssignmentItem("Assignment 2", "DBMS", "20 Mar 2025", "Submitted"),
-        AssignmentItem("Assignment 3", "Operating Systems", "18 Mar 2025", "Late")
-    )
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    var assignments by remember {
+        mutableStateOf<List<StudentAssignmentUI>>(emptyList())
+    }
+    var isLoading by remember { mutableStateOf(true) }
 
-        Spacer(modifier = Modifier.height(40.dp))
+    LaunchedEffect(Unit) {
+        try {
+            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-        Text(
-            text = "Assignments",
-            style = MaterialTheme.typography.headlineMedium
-        )
+            val userDoc = db.collection("users").document(uid).get().await()
+            val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-        Spacer(modifier = Modifier.height(16.dp))
+            val studentDoc =
+                db.collection("students_detail").document(enrollmentId).get().await()
+            val studentClass = studentDoc.getString("class") ?: return@LaunchedEffect
 
-        LazyColumn {
-            items(assignments) { assignment ->
-                AssignmentCard(assignment)
+            val snapshot = db.collection("assignments")
+                .whereEqualTo("class", studentClass)
+                .whereEqualTo("status", "active")
+                .get()
+                .await()
+
+            val list = mutableListOf<StudentAssignmentUI>()
+
+            for (doc in snapshot.documents) {
+                val assignment = Assignment(
+                    id = doc.id,
+                    title = doc.getString("title") ?: "",
+                    description = doc.getString("description") ?: "",
+                    subjectId = doc.getString("subjectId") ?: "",
+                    subjectName = doc.getString("subjectName") ?: "",
+                    className = doc.getString("class") ?: "",
+                    dueDate = doc.getString("dueDate") ?: "",
+                    attachmentName = doc.getString("attachmentName"),
+                    attachmentUrl = doc.getString("attachmentUrl")
+                )
+
+                val submissionDocId = "${assignment.id}_$enrollmentId"
+
+                val isSubmitted =
+                    db.collection("assignment_submissions")
+                        .document(submissionDocId)
+                        .get()
+                        .await()
+                        .exists()
+
+                list.add(
+                    StudentAssignmentUI(
+                        assignment = assignment,
+                        isSubmitted = isSubmitted
+                    )
+                )
+            }
+
+            assignments = list
+
+        } finally {
+            isLoading = false
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Assignments") })
+        },
+        bottomBar = {
+            StudentBottomNavBar(navController)
+        }
+    ) { padding ->
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+
+            when {
+                isLoading -> CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+
+                assignments.isEmpty() -> {
+                    Text(
+                        "No assignments available",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                else -> {
+                    LazyColumn {
+                        items(assignments) { item ->
+                            AssignmentCard(
+                                item = item,
+                                onClick = {
+                                    navController.navigate(
+                                        "${Routes.STUDENT_ASSIGNMENT_DETAIL}/${item.assignment.id}"
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+
 @Composable
-fun AssignmentCard(assignment: AssignmentItem) {
+fun AssignmentCard(
+    item: StudentAssignmentUI,
+    onClick: () -> Unit
+) {
+    val assignment = item.assignment
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(vertical = 8.dp)
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
+        Column(modifier = Modifier.padding(16.dp)) {
 
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-
-            Text(
-                text = assignment.title,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text("Subject: ${assignment.subject}")
-            Text("Due Date: ${assignment.dueDate}")
-            Text("Status: ${assignment.status}")
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    // Later: submit assignment / view details
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    if (assignment.status == "Submitted") "View"
-                    else "Submit"
+                    text = assignment.title,
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = if (item.isSubmitted) "Submitted" else "Pending",
+                    color = if (item.isSubmitted)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text("Subject: ${assignment.subjectName}")
+            Text("Due Date: ${assignment.dueDate}")
         }
     }
 }
+
+
+
+data class StudentAssignmentUI(
+    val assignment: Assignment,
+    val isSubmitted: Boolean
+)
+
+
+

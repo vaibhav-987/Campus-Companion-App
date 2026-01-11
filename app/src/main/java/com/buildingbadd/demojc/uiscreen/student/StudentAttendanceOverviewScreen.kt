@@ -85,6 +85,9 @@ fun StudentAttendanceOverviewScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("My Attendance") })
+        },
+        bottomBar = {
+            StudentBottomNavBar(navController)
         }
     ) { padding ->
 

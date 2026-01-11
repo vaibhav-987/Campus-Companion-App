@@ -79,6 +79,9 @@ fun StudentAttendanceHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(subjectName.ifEmpty { "Attendance History" }) })
+        },
+        bottomBar = {
+            StudentBottomNavBar(navController)
         }
     ) { padding ->
 

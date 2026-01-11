@@ -77,6 +77,7 @@ dependencies {
     implementation ("com.google.android.gms:play-services-auth-api-phone")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("com.google.firebase:firebase-storage:22.0.1")
 
 
 
