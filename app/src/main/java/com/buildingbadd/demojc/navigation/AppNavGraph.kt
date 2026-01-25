@@ -14,6 +14,8 @@ import com.buildingbadd.demojc.uiscreen.auth.PendingApprovalScreen
 import com.buildingbadd.demojc.uiscreen.auth.SignupScreen
 import com.buildingbadd.demojc.uiscreen.faculty.AssignmentGivenScreen
 import com.buildingbadd.demojc.uiscreen.faculty.AssignmentSubmissionsScreen
+import com.buildingbadd.demojc.uiscreen.faculty.EvaluateAssignmentScreen
+import com.buildingbadd.demojc.uiscreen.faculty.FacultyAssignmentDetailScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAssignmentsScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAttendanceScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceScreen
@@ -24,12 +26,14 @@ import com.buildingbadd.demojc.uiscreen.student.StudentReportsScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyDashboard
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyProfileScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyUploadNotesScreen
+import com.buildingbadd.demojc.uiscreen.faculty.MarkAttendanceScreen
 import com.buildingbadd.demojc.uiscreen.student.AssignmentDetailScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceOverviewScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceHistoryScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentNotesBySubjectScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentProfileScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentSubjectsScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentTodayLecturesScreen
 import com.buildingbadd.demojc.uiscreen.welcome.WelcomeScreen
 
 // 1. Create a top-level Composable function to hold the graph
@@ -78,16 +82,16 @@ fun AppNavGraph(
             StudentAttendanceScreen(navController)
         }
 
-        composable(Routes.STUDENT_NOTES) {
-            StudentNotesScreen(navController)
-        }
+//        composable(Routes.STUDENT_NOTES) {
+//            StudentNotesScreen(navController)
+//        }
 
         composable(Routes.STUDENT_ASSIGNMENTS) {
             StudentAssignmentsScreen(navController)
         }
 
-        composable(Routes.STUDENT_REPORTS) {
-            StudentReportsScreen()
+        composable(Routes.STUDENT_LECTURES) {
+            StudentTodayLecturesScreen(navController)
         }
 
         composable(Routes.STUDENT_PROFILE) {
@@ -99,16 +103,17 @@ fun AppNavGraph(
         }
 
         composable(
-            route = "${Routes.STUDENT_ATTENDANCE_HISTORY}/{subjectId}",
+            route = "attendance_history/{subjectId}",
             arguments = listOf(
                 navArgument("subjectId") { type = NavType.StringType }
             )
-        ) {
+        ) { backStackEntry ->
             StudentAttendanceHistoryScreen(
-                navController,
-                it.arguments!!.getString("subjectId")!!
+                navController = navController,
+                subjectId = backStackEntry.arguments!!.getString("subjectId")!!
             )
         }
+
 
         composable(
             route = "${Routes.STUDENT_ASSIGNMENT_DETAIL}/{assignmentId}",
@@ -124,14 +129,14 @@ fun AppNavGraph(
         }
 
         composable(
-            route = "student_notes/{subjectId}"
+            route = "student_notes/{subjectId}",
+            arguments = listOf(navArgument("subjectId") { type = NavType.StringType })
         ) {
             StudentNotesBySubjectScreen(
-                navController,
-                it.arguments?.getString("subjectId")!!
+                navController = navController,
+                subjectId = it.arguments?.getString("subjectId")!!
             )
         }
-
 
         /* ---------------- FACULTY ---------------- */
 
@@ -169,8 +174,57 @@ fun AppNavGraph(
                 navArgument("assignmentId") { type = NavType.StringType }
             )
         ) {
-            AssignmentSubmissionsScreen(navController)
+            AssignmentSubmissionsScreen(navController, it.arguments?.getString("assignmentId")!!)
         }
+
+
+        composable(
+            route = "faculty_assignment_detail/{assignmentId}",
+            arguments = listOf(
+                navArgument("assignmentId") { type = NavType.StringType }
+            )
+        ) {
+            FacultyAssignmentDetailScreen(
+                navController = navController,
+                assignmentId = it.arguments?.getString("assignmentId")!!
+            )
+        }
+
+
+        composable(
+            route = "evaluate_assignment/{submissionId}",
+            arguments = listOf(
+                navArgument("submissionId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val submissionId = requireNotNull(
+                backStackEntry.arguments?.getString("submissionId")
+            )
+
+            EvaluateAssignmentScreen(
+                navController = navController,
+                submissionId = submissionId
+            )
+        }
+
+        composable(
+            route = "mark_attendance/{timetableId}/{className}/{subjectId}/{startTime}"
+        ) {
+            MarkAttendanceScreen(navController)
+        }
+
+        composable(
+            route = "student_notes_subject/{subjectId}",
+            arguments = listOf(navArgument("subjectId") { type = NavType.StringType })
+        ) {
+            StudentNotesBySubjectScreen(
+                navController,
+                it.arguments!!.getString("subjectId")!!
+            )
+        }
+
+
     }
 }
 

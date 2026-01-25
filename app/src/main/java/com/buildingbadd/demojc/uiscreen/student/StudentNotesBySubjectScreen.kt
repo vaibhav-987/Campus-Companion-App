@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -24,6 +25,7 @@ fun StudentNotesBySubjectScreen(
     navController: NavHostController,
     subjectId: String
 ) {
+    val auth = FirebaseAuth.getInstance()
 
     val db = FirebaseFirestore.getInstance()
     val context = LocalContext.current
@@ -33,8 +35,19 @@ fun StudentNotesBySubjectScreen(
 
     LaunchedEffect(subjectId) {
         try {
+
+            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
+
+            val userDoc = db.collection("users").document(uid).get().await()
+            val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
+
+            val studentDoc =
+                db.collection("students_detail").document(enrollmentId).get().await()
+            val currentSemesterId = studentDoc.getString("currentSemesterId") ?: ""
+
             val snapshot = db.collection("notes")
                 .whereEqualTo("subjectId", subjectId)
+                .whereEqualTo("semesterId", currentSemesterId)
                 .get()
                 .await()
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -60,7 +61,7 @@ fun StudentAttendanceHistoryScreen(
                 list.add(
                     SubjectAttendanceRecord(
                         date = doc.getString("date") ?: "",
-                        time = doc.getString("time") ?: "",
+                        time = doc.getString("startTime") ?: "",
                         isPresent = isPresent
                     )
                 )
@@ -113,22 +114,53 @@ fun StudentAttendanceHistoryScreen(
 
 @Composable
 fun AttendanceHistoryRow(record: SubjectAttendanceRecord) {
-    Row(
+
+    val statusColor =
+        if (record.isPresent)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.error
+
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 6.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column {
-            Text("${record.date}  ${record.time}")
-        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-        Text(
-            if (record.isPresent) "Present" else "Absent",
-            color = if (record.isPresent)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.error
-        )
+            Column {
+                Text(
+                    text = record.date,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = "Time: ${record.time}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Surface(
+                color = statusColor.copy(alpha = 0.12f),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = if (record.isPresent) "Present" else "Absent",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    color = statusColor,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
     }
 }

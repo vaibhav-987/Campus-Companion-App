@@ -32,30 +32,29 @@ fun StudentSubjectsScreen(navController: NavHostController) {
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-            // 🔹 Get student class
+            // 🔹 Get student details
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
-            val studentClass = studentDoc.getString("class") ?: return@LaunchedEffect
 
-            // 🔹 Fetch notes for class (only subject info)
-            val snapshot = db.collection("notes")
-                .whereEqualTo("class", studentClass)
+            val currentSemesterId =
+                studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
+
+            // 🔹 Fetch subjects for current semester
+            val snapshot = db.collection("subjects")
+                .whereEqualTo("semesterId", currentSemesterId)
                 .get()
                 .await()
 
-            subjects = snapshot.documents
-                .mapNotNull {
-                    val id = it.getString("subjectId")
-                    val name = it.getString("subjectName")
-                    if (id != null && name != null) id to name else null
-                }
-                .distinct()
+            subjects = snapshot.documents.mapNotNull {
+                val id = it.getString("subjectID")
+                val name = it.getString("name")
+                if (id != null && name != null) id to name else null
+            }
 
         } finally {
             isLoading = false
         }
     }
-
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Subjects") })

@@ -22,10 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.buildingbadd.demojc.R
+import com.buildingbadd.demojc.updateFacultySubjects
 
 
 @Composable
 fun WelcomeScreen(navController: NavHostController) {
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -82,6 +84,34 @@ fun WelcomeScreen(navController: NavHostController) {
             ) {
                 Text("Sign up")
             }
+
+            Spacer(Modifier.height(32.dp))
+
+            // This is the button to trigger adding subjects
+            // In WelcomeScreen.kt
+
+            // In WelcomeScreen.kt
+
+// ...
+
+// This is the button to trigger adding subjects
+            Button(onClick = {
+                // ✅ FIX: Call the function with the 'context' variable you defined earlier.
+                updateFacultySubjects(context) { success ->
+                    if (success) {
+                        // Handle success (e.g., show a Toast)
+                    } else {
+                        // Handle failure
+                    }
+                }
+            }) {
+                Text("Initialize Subject Data (Admin)")
+            }
+
+// ...
+
+
+
 
             // 🔥 This pushes the illustration to the bottom
             Spacer(modifier = Modifier.weight(1f))

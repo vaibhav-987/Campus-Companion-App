@@ -5,6 +5,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,11 +16,11 @@ import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 
 /* ---------------------------------------------------
-   MAIN SCREEN
+   FACULTY UPLOAD NOTES (FINAL – SEMESTER AWARE)
 --------------------------------------------------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,105 +28,79 @@ import kotlinx.coroutines.tasks.await
 fun FacultyUploadNotesScreen(navController: NavHostController) {
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    val db = FirebaseFirestore.getInstance()
-    val storage = FirebaseStorage.getInstance()
     val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
 
-    // 🔹 Dynamic data from Firestore
-    var classList by remember { mutableStateOf<List<String>>(emptyList()) }
-    var subjectList by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-
-    // 🔹 Form fields
+    // ---------------- UI STATE ----------------
     var title by remember { mutableStateOf("") }
-    var selectedClass by remember { mutableStateOf("") }
-    var selectedSubjectId by remember { mutableStateOf("") }
-    var selectedSubjectName by remember { mutableStateOf("") }
+
+    var subjects by remember { mutableStateOf<List<FacultySubjectUI>>(emptyList()) }
+    var selectedSubject by remember { mutableStateOf<FacultySubjectUI?>(null) }
+    var subjectExpanded by remember { mutableStateOf(false) }
 
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedFileName by remember { mutableStateOf("") }
+    var fileName by remember { mutableStateOf("") }
 
     var isUploading by remember { mutableStateOf(false) }
 
-    /* ---------------------------------------------------
-       FETCH FACULTY ASSIGNED CLASSES & SUBJECTS
-    --------------------------------------------------- */
-
+    // ---------------- LOAD SUBJECTS ----------------
     LaunchedEffect(Unit) {
-        try {
-            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
+        val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-            // 1️⃣ Get facultyId
-            val userDoc = db.collection("users").document(uid).get().await()
-            val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
+        val userDoc = db.collection("users").document(uid).get().await()
+        val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
 
-            // 2️⃣ Get faculty_details
-            val facultyDoc =
-                db.collection("faculty_details").document(facultyId).get().await()
+        val facultyDoc =
+            db.collection("faculty_details").document(facultyId).get().await()
 
-            /* ---------- CLASSES ---------- */
-            val assignedClassesAny = facultyDoc.get("assignedClasses")
-            classList = when (assignedClassesAny) {
-                is String -> listOf(assignedClassesAny)
-                is List<*> -> assignedClassesAny.filterIsInstance<String>()
-                else -> emptyList()
-            }
+        val assignedSubjectIds =
+            facultyDoc.get("assignedSubjectIds") as? List<String> ?: emptyList()
 
-            /* ---------- SUBJECTS ---------- */
-            /* ---------- SUBJECTS ---------- */
+        if (assignedSubjectIds.isEmpty()) return@LaunchedEffect
 
-            val subjectsAny = facultyDoc.get("subjects")
+        val isOdd = currentSemesterType() == SemesterType.ODD
+        val filtered = mutableListOf<FacultySubjectUI>()
 
-            val subjectIds = when (subjectsAny) {
-                is List<*> -> subjectsAny.filterIsInstance<String>()
-                is String -> listOf(subjectsAny)
-                else -> emptyList()
-            }
+        for (subjectId in assignedSubjectIds) {
+            val subjectDoc =
+                db.collection("subjects").document(subjectId).get().await()
 
-            val resolvedSubjects = mutableListOf<Pair<String, String>>()
+            if (!subjectDoc.exists()) continue
 
-            for (subjectId in subjectIds) {
-                val subjectDoc =
-                    db.collection("subjects").document(subjectId).get().await()
+            val semesterId = subjectDoc.getString("semesterId") ?: continue
+            val semesterNo = semesterId.takeLast(1).toInt()
 
-                val subjectName = subjectDoc.getString("subjectName")
+            val valid =
+                if (isOdd) semesterNo % 2 == 1 else semesterNo % 2 == 0
 
-                if (subjectName != null) {
-                    resolvedSubjects.add(subjectId to subjectName)
-                }
-            }
+            if (!valid) continue
 
-            subjectList = resolvedSubjects
-
-
-        } catch (e: Exception) {
-            Toast.makeText(context, "Failed to load faculty data", Toast.LENGTH_LONG).show()
+            filtered.add(
+                FacultySubjectUI(
+                    subjectId = subjectId,
+                    subjectName = subjectDoc.getString("name") ?: "",
+                    courseId = subjectDoc.getString("courseId") ?: "",
+                    semesterId = semesterId
+                )
+            )
         }
+
+        subjects = filtered
     }
 
-    /* ---------------------------------------------------
-       FILE PICKER
-    --------------------------------------------------- */
-
+    // ---------------- FILE PICKER ----------------
     val filePickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
-        ) { uri ->
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 selectedFileUri = uri
-                selectedFileName = uri.lastPathSegment ?: "notes_file"
+                fileName = uri.lastPathSegment ?: "notes_file"
             }
         }
 
-    /* ---------------------------------------------------
-       UI
-    --------------------------------------------------- */
-
+    // ---------------- UI ----------------
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Upload Notes") })
-        }
+        topBar = { TopAppBar(title = { Text("Upload Notes") }) },
+        bottomBar = { FacultyBottomNavBar(navController) }
     ) { padding ->
 
         Column(
@@ -132,8 +108,40 @@ fun FacultyUploadNotesScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+
+            // SUBJECT DROPDOWN
+            ExposedDropdownMenuBox(
+                expanded = subjectExpanded,
+                onExpandedChange = { subjectExpanded = !subjectExpanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedSubject?.displayText ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Select Subject") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(subjectExpanded)
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = subjectExpanded,
+                    onDismissRequest = { subjectExpanded = false }
+                ) {
+                    subjects.forEach { subject ->
+                        DropdownMenuItem(
+                            text = { Text(subject.displayText) },
+                            onClick = {
+                                selectedSubject = subject
+                                subjectExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = title,
@@ -142,70 +150,40 @@ fun FacultyUploadNotesScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            DropdownField(
-                label = "Select Class",
-                options = classList,
-                selectedValue = selectedClass,
-                onSelected = { selectedClass = it }
-            )
-
-            DropdownField(
-                label = "Select Subject",
-                options = subjectList.map { it.second },
-                selectedValue = selectedSubjectName,
-                onSelected = { name ->
-                    val subject = subjectList.first { it.second == name }
-                    selectedSubjectId = subject.first
-                    selectedSubjectName = subject.second
-                }
-            )
-
             Button(
                 onClick = { filePickerLauncher.launch("*/*") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    if (selectedFileName.isEmpty())
-                        "Choose File (PDF / PPT)"
-                    else
-                        "Selected: $selectedFileName"
-                )
+                Icon(Icons.Default.UploadFile, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(if (fileName.isEmpty()) "Attach PDF / PPT" else fileName)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = {
                     if (
+                        selectedSubject == null ||
                         title.isBlank() ||
-                        selectedClass.isBlank() ||
-                        selectedSubjectId.isBlank() ||
                         selectedFileUri == null
                     ) {
-                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
 
                     isUploading = true
 
-                    scope.launch {
-                        try {
-                            uploadNotes(
-                                title = title,
-                                className = selectedClass,
-                                subjectId = selectedSubjectId,
-                                subjectName = selectedSubjectName,
-                                fileUri = selectedFileUri!!,
-                                fileName = selectedFileName
-                            )
-                            Toast.makeText(context, "Notes uploaded successfully", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, e.message ?: "Upload failed", Toast.LENGTH_LONG).show()
-                        } finally {
+                    uploadNotes(
+                        subject = selectedSubject!!,
+                        title = title,
+                        fileUri = selectedFileUri!!,
+                        fileName = fileName,
+                        navController = navController,
+                        onComplete = {
                             isUploading = false
                         }
-                    }
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isUploading
@@ -217,89 +195,66 @@ fun FacultyUploadNotesScreen(navController: NavHostController) {
 }
 
 /* ---------------------------------------------------
-   FIREBASE UPLOAD LOGIC
+   FIREBASE UPLOAD
 --------------------------------------------------- */
 
-suspend fun uploadNotes(
+fun uploadNotes(
+    subject: FacultySubjectUI,
     title: String,
-    className: String,
-    subjectId: String,
-    subjectName: String,
     fileUri: Uri,
-    fileName: String
+    fileName: String,
+    navController: NavHostController,
+    onComplete: () -> Unit
 ) {
+
     val db = FirebaseFirestore.getInstance()
     val storage = FirebaseStorage.getInstance()
     val auth = FirebaseAuth.getInstance()
 
-    val uid = auth.currentUser!!.uid
-    val userDoc = db.collection("users").document(uid).get().await()
-    val facultyId = userDoc.getString("facultyId")!!
+    val facultyId = auth.currentUser!!.uid
 
-    val storageRef =
-        storage.reference.child("notes/$className/$subjectId/$fileName")
+    val ref =
+        storage.reference.child("notes/${subject.subjectId}/$fileName")
 
-    storageRef.putFile(fileUri).await()
-    val downloadUrl = storageRef.downloadUrl.await()
+    ref.putFile(fileUri)
+        .continueWithTask { ref.downloadUrl }
+        .addOnSuccessListener { url ->
 
-    val data = hashMapOf(
-        "title" to title,
-        "class" to className,
-        "subjectId" to subjectId,
-        "subjectName" to subjectName,
-        "facultyId" to facultyId,
-        "fileName" to fileName,
-        "fileUrl" to downloadUrl.toString(),
-        "uploadedAt" to System.currentTimeMillis()
-    )
+            val data = hashMapOf(
+                "title" to title,
+                "courseId" to subject.courseId,
+                "semesterId" to subject.semesterId,
+                "subjectId" to subject.subjectId,
+                "subjectName" to subject.subjectName,
+                "facultyId" to facultyId,
+                "fileName" to fileName,
+                "fileUrl" to url.toString(),
+                "uploadedAt" to System.currentTimeMillis(),
+                "status" to "active"
+            )
 
-    db.collection("notes").add(data).await()
+            db.collection("notes")
+                .add(data)
+                .addOnSuccessListener {
+                    onComplete()
+                    navController.popBackStack()
+                }
+        }
 }
 
 /* ---------------------------------------------------
-   DROPDOWN COMPONENT (Material3 SAFE)
+   HELPERS
 --------------------------------------------------- */
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DropdownField(
-    label: String,
-    options: List<String>,
-    selectedValue: String,
-    onSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
+enum class SemesterType { ODD, EVEN }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedValue,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth()
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onSelected(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
+fun currentSemesterType(): SemesterType {
+    val month = LocalDate.now().monthValue
+    return when (month) {
+        in 7..12 -> SemesterType.ODD
+        in 1..5 -> SemesterType.EVEN
+        else -> throw IllegalStateException("Academic transition month")
     }
 }
+
+

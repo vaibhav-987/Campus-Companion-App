@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -29,7 +30,7 @@ fun StudentAssignmentsScreen(navController: NavHostController) {
     val context = LocalContext.current
 
     var assignments by remember {
-        mutableStateOf<List<StudentAssignmentUI>>(emptyList())
+        mutableStateOf<List<StudentAssignmentItem>>(emptyList())
     }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -40,17 +41,22 @@ fun StudentAssignmentsScreen(navController: NavHostController) {
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-            val studentDoc =
-                db.collection("students_detail").document(enrollmentId).get().await()
+            val studentDoc = db.collection("students_detail")
+                .document(enrollmentId)
+                .get()
+                .await()
+
+            val currentSemesterId =
+                studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
             val studentClass = studentDoc.getString("class") ?: return@LaunchedEffect
 
             val snapshot = db.collection("assignments")
-                .whereEqualTo("class", studentClass)
+                .whereEqualTo("semesterId", currentSemesterId)
                 .whereEqualTo("status", "active")
                 .get()
                 .await()
 
-            val list = mutableListOf<StudentAssignmentUI>()
+            val list = mutableListOf<StudentAssignmentItem>()
 
             for (doc in snapshot.documents) {
                 val assignment = Assignment(
@@ -67,19 +73,23 @@ fun StudentAssignmentsScreen(navController: NavHostController) {
 
                 val submissionDocId = "${assignment.id}_$enrollmentId"
 
-                val isSubmitted =
+                val submissionDoc =
                     db.collection("assignment_submissions")
                         .document(submissionDocId)
                         .get()
                         .await()
-                        .exists()
+
+                val status = submissionDoc.getString("status")
+                val marks = submissionDoc.getLong("marks")?.toInt()
 
                 list.add(
-                    StudentAssignmentUI(
+                    StudentAssignmentItem(
                         assignment = assignment,
-                        isSubmitted = isSubmitted
+                        submissionStatus = status,
+                        marks = marks
                     )
                 )
+
             }
 
             assignments = list
@@ -139,10 +149,18 @@ fun StudentAssignmentsScreen(navController: NavHostController) {
 
 @Composable
 fun AssignmentCard(
-    item: StudentAssignmentUI,
+    item: StudentAssignmentItem,
     onClick: () -> Unit
 ) {
     val assignment = item.assignment
+    val status = item.submissionStatus
+    val marks = item.marks
+
+    val statusColor = when (status) {
+        "evaluated" -> Color(0xFF2E7D32)   // ✅ green
+        "submitted" -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     Card(
         modifier = Modifier
@@ -153,39 +171,58 @@ fun AssignmentCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = assignment.title,
-                    style = MaterialTheme.typography.titleMedium
-                )
+            Text(
+                text = assignment.title,
+                style = MaterialTheme.typography.titleMedium
+            )
 
-                Text(
-                    text = if (item.isSubmitted) "Submitted" else "Pending",
-                    color = if (item.isSubmitted)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text("Subject: ${assignment.subjectName}")
             Text("Due Date: ${assignment.dueDate}")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            when (status) {
+
+                "evaluated" -> {
+                    Text(
+                        text = "Evaluated${if (marks != null) " • Marks: $marks" else ""}",
+                        color = Color(0xFF2E7D32), // green
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+
+                "submitted" -> {
+                    Text(
+                        text = "Pending Evaluation",
+                        color = Color(0xFFF9A825), // amber
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+
+                else -> {
+                    Text(
+                        text = "Not Submitted",
+                        color = MaterialTheme.colorScheme.error, // red
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
         }
     }
 }
 
 
 
-data class StudentAssignmentUI(
+
+
+data class StudentAssignmentItem(
     val assignment: Assignment,
-    val isSubmitted: Boolean
+    val submissionStatus: String?, // "submitted" | "evaluated" | null
+    val marks: Int?
 )
+
 
 
 

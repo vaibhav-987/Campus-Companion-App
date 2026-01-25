@@ -21,35 +21,39 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+
 fun StudentNotesScreen(navController: NavHostController) {
 
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
-    val context = LocalContext.current
 
-    var notes by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var subjects by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-            // 🔹 Get enrollmentId
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-            // 🔹 Get student class
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
-            val studentClass = studentDoc.getString("class") ?: return@LaunchedEffect
 
-            // 🔹 Fetch notes for class
-            val snapshot = db.collection("notes")
-                .whereEqualTo("class", studentClass)
+            val currentSemesterId =
+                studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
+
+            // 🔹 Fetch subjects for semester
+            val snapshot = db.collection("subjects")
+                .whereEqualTo("semesterId", currentSemesterId)
                 .get()
                 .await()
 
-            notes = snapshot.documents.mapNotNull { it.data }
+            subjects = snapshot.documents.mapNotNull {
+                val id = it.getString("subjectId")
+                val name = it.getString("name")
+                if (id != null && name != null) id to name else null
+            }
 
         } finally {
             isLoading = false
@@ -57,9 +61,7 @@ fun StudentNotesScreen(navController: NavHostController) {
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Notes") })
-        }
+        topBar = { TopAppBar(title = { Text("Notes") }) }
     ) { padding ->
 
         Box(
@@ -70,23 +72,32 @@ fun StudentNotesScreen(navController: NavHostController) {
         ) {
 
             when {
-                isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                isLoading -> CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
 
-                notes.isEmpty() -> {
-                    Text(
-                        "No notes available",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                subjects.isEmpty() -> Text(
+                    "No subjects found",
+                    modifier = Modifier.align(Alignment.Center)
+                )
 
-                else -> {
-                    LazyColumn {
-                        items(notes) { note ->
-                            StudentNoteCard(note, context)
+                else -> LazyColumn {
+                    items(subjects) { (subjectId, subjectName) ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .clickable {
+                                    navController.navigate(
+                                        "student_notes_subject/$subjectId"
+                                    )
+                                },
+                            elevation = CardDefaults.cardElevation(6.dp)
+                        ) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text(subjectName, style = MaterialTheme.typography.titleMedium)
+                                Text(subjectId, style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
@@ -94,7 +105,6 @@ fun StudentNotesScreen(navController: NavHostController) {
         }
     }
 }
-
 
 @Composable
 fun StudentNoteCard(

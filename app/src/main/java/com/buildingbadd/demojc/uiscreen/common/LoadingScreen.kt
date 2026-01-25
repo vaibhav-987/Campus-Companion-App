@@ -28,7 +28,7 @@ fun LoadingScreen() {
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             Text(
                 text = "Setting up your dashboard...",

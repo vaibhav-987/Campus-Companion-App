@@ -47,6 +47,7 @@ import com.buildingbadd.demojc.R
 import com.buildingbadd.demojc.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -60,22 +61,30 @@ fun StudentDashboard(navController: NavHostController) {
     var userRole by remember { mutableStateOf("student") }
 
     LaunchedEffect(Unit) {
+
         val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-        db.collection("users")
+        val userDoc = db.collection("users")
             .document(uid)
             .get()
-            .addOnSuccessListener { doc ->
-                userName = doc.getString("name") ?: "Student"
-                userRole = doc.getString("role") ?: "student"
-            }
-    }
+            .await()
 
+        userRole = userDoc.getString("role") ?: "student"
+
+        val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
+
+        val studentDoc = db.collection("students_detail")
+            .document(enrollmentId)
+            .get()
+            .await()
+
+        userName = studentDoc.getString("name") ?: "Student"
+    }
     val dashboardItems = listOf(
         DashboardItem(
             title = "Attendance",
             iconRes = R.drawable.ic_attendance,
-            onClick = { navController.navigate("student_attendance") }
+            onClick = { navController.navigate(Routes.STUDENT_ATTENDANCE_OVERVIEW) }
         ),
         DashboardItem(
             title = "Notes",
@@ -88,9 +97,9 @@ fun StudentDashboard(navController: NavHostController) {
             onClick = { navController.navigate("student_assignments") }
         ),
         DashboardItem(
-            title = "Reports",
-            iconRes = R.drawable.ic_report,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+            title = "Schedules",
+            iconRes = R.drawable.ic_presentation,
+            onClick = {navController.navigate("student_lectures") }
         ),
         DashboardItem(
             title = "Feedback",
@@ -132,12 +141,7 @@ fun StudentDashboard(navController: NavHostController) {
                     Column {
                         Text(
                             text = "Hi, $userName",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = userRole.replaceFirstChar { it.uppercase() },
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.headlineSmall
                         )
                     }
                 }

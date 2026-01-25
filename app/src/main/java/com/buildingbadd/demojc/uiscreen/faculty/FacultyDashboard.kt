@@ -1,5 +1,6 @@
 package com.buildingbadd.demojc.uiscreen.faculty
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,8 @@ fun FacultyDashboard(navController: NavHostController) {
 
     var facultyName by remember { mutableStateOf("Faculty") }
     var isLoading by remember { mutableStateOf(true) }
+    var userRole by remember { mutableStateOf("faculty") }
+
 
     LaunchedEffect(Unit) {
         val uid = auth.currentUser?.uid ?: return@LaunchedEffect
@@ -56,16 +59,40 @@ fun FacultyDashboard(navController: NavHostController) {
         val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
 
         val facultyDoc =
-            db.collection("faculty_detail").document(facultyId).get().await()
+            db.collection("faculty_details").document(facultyId).get().await()
 
         facultyName = facultyDoc.getString("name") ?: "Faculty"
         isLoading = false
+
+        userRole = userDoc.getString("role") ?: "faculty"
+
+        val db = FirebaseFirestore.getInstance()
+
+        val doc = db.collection("weekly_timetables")
+            .document("BSCIT_SEM1_WEEKLY")
+            .get()
+            .await()
+
+        Log.d("TIMETABLE_TEST", doc.data.toString())
+
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Faculty Dashboard") },
+                title = {
+                    Column {
+                        Text(
+                            text = "Hi, $facultyName",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = userRole.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = {
                         auth.signOut()

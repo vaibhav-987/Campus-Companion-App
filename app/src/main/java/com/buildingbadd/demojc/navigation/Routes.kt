@@ -13,7 +13,7 @@ object Routes {
     const val STUDENT_ATTENDANCE = "student_attendance"
     const val STUDENT_NOTES = "student_notes"
     const val STUDENT_ASSIGNMENTS = "student_assignments"
-    const val STUDENT_REPORTS = "student_reports"
+    const val STUDENT_LECTURES = "student_lectures"
     const val STUDENT_PROFILE = "student_profile"
     const val STUDENT_ATTENDANCE_OVERVIEW = "student_attendance_overview"
     const val STUDENT_ATTENDANCE_HISTORY = "student_attendance_history"

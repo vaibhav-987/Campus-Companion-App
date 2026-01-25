@@ -12,6 +12,7 @@ navigationComposeJvmstubs = "2.9.6"
 navigationCompose = "2.9.6"
 firebaseAuth = "24.0.1"
 firebaseStorage = "22.0.1"
+material3 = "1.5.0-alpha06"
 
 
 [libraries]

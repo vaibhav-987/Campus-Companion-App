@@ -1,38 +1,14 @@
 package com.buildingbadd.demojc.uiscreen.faculty
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -40,13 +16,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FacultyCreateAssignmentScreen(navController: NavHostController) {
-
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var attachmentName by remember { mutableStateOf("") }
 
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
@@ -56,19 +32,20 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
     var dueDate by remember { mutableStateOf("") }
     var totalMarks by remember { mutableStateOf("") }
 
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var attachmentName by remember { mutableStateOf("") }
+
+    var subjects by remember { mutableStateOf<List<FacultySubjectUI>>(emptyList()) }
+    var selectedSubject by remember { mutableStateOf<FacultySubjectUI?>(null) }
+    var subjectDropdownExpanded by remember { mutableStateOf(false) }
+
     var facultyId by remember { mutableStateOf("") }
     var facultyClass by remember { mutableStateOf("") }
 
-    // 🔹 Subject selection (simple dropdown)
-    var subjects by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-    var selectedSubjectId by remember { mutableStateOf("") }
-    var selectedSubjectName by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
-
     var isLoading by remember { mutableStateOf(false) }
 
-    // 🔹 Load faculty details + subjects
+    // ---------------- LOAD FACULTY SUBJECTS ----------------
     LaunchedEffect(Unit) {
         val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
@@ -78,24 +55,50 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
         val facultyDoc =
             db.collection("faculty_details").document(facultyId).get().await()
 
-        facultyClass = facultyDoc.getString("assignedClasses") ?: ""
+//        facultyClass = facultyDoc.getString("class") ?: ""
 
-        val subjectIds = facultyDoc.get("subjects") as? List<String> ?: emptyList()
+        val assignedSubjectIds =
+            facultyDoc.get("assignedSubjectIds") as? List<String> ?: emptyList()
 
-        val subjectList = mutableListOf<Pair<String, String>>()
-        for (id in subjectIds) {
-            val subjectDoc = db.collection("subjects").document(id).get().await()
-            val name = subjectDoc.getString("subjectName") ?: id
-            subjectList.add(id to name)
+        if (assignedSubjectIds.isEmpty()) return@LaunchedEffect
+
+        val isOddSemester = isOddSemester()
+        val filteredSubjects = mutableListOf<FacultySubjectUI>()
+
+        for (subjectId in assignedSubjectIds) {
+
+            val subjectDoc = db.collection("subjects")
+                .document(subjectId)
+                .get()
+                .await()
+
+            if (!subjectDoc.exists()) continue
+
+            val semesterId = subjectDoc.getString("semesterId") ?: continue
+            val semesterNo = semesterId.takeLast(1).toInt()
+
+            val validSemester =
+                if (isOddSemester) semesterNo % 2 == 1 else semesterNo % 2 == 0
+
+            if (!validSemester) continue
+
+            filteredSubjects.add(
+                FacultySubjectUI(
+                    subjectId = subjectId,
+                    subjectName = subjectDoc.getString("name") ?: "",
+                    semesterId = semesterId,
+                    courseId = TODO()
+                )
+            )
         }
 
-
-        subjects = subjectList
+        subjects = filteredSubjects
+        Log.d("ASSIGN", "Filtered subjects = ${subjects.size}")
     }
+
+    // ---------------- FILE PICKER ----------------
     val filePickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
-        ) { uri: Uri? ->
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 selectedFileUri = uri
                 attachmentName = uri.lastPathSegment ?: "assignment_file"
@@ -103,12 +106,8 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
         }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Create Assignment") })
-        },
-        bottomBar = {
-            FacultyBottomNavBar(navController)
-        }
+        topBar = { TopAppBar(title = { Text("Create Assignment") }) },
+        bottomBar = { FacultyBottomNavBar(navController) }
     ) { padding ->
 
         Column(
@@ -119,35 +118,32 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // 🔹 SUBJECT DROPDOWN
+            // ---------------- SUBJECT DROPDOWN ----------------
             ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+                expanded = subjectDropdownExpanded,
+                onExpandedChange = { subjectDropdownExpanded = !subjectDropdownExpanded }
             ) {
                 OutlinedTextField(
-                    value = selectedSubjectName,
+                    value = selectedSubject?.displayText ?: "",
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Select Subject") },
                     trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                        ExposedDropdownMenuDefaults.TrailingIcon(subjectDropdownExpanded)
                     },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
 
                 ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    expanded = subjectDropdownExpanded,
+                    onDismissRequest = { subjectDropdownExpanded = false }
                 ) {
-                    subjects.forEach { (id, name) ->
+                    subjects.forEach { subject ->
                         DropdownMenuItem(
-                            text = { Text(name) },
+                            text = { Text(subject.displayText) },
                             onClick = {
-                                selectedSubjectId = id
-                                selectedSubjectName = name
-                                expanded = false
+                                selectedSubject = subject
+                                subjectDropdownExpanded = false
                             }
                         )
                     }
@@ -173,14 +169,9 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 onClick = { filePickerLauncher.launch("*/*") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    if (attachmentName.isEmpty())
-                        "Attach Assignment File"
-                    else
-                        "Attached: $attachmentName"
-                )
+                Text(if (attachmentName.isEmpty()) "Attach Assignment File"
+                else "Attached: $attachmentName")
             }
-
 
             OutlinedTextField(
                 value = dueDate,
@@ -190,14 +181,10 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Select date"
-                        )
+                        Icon(Icons.Default.DateRange, contentDescription = "Pick Date")
                     }
                 }
             )
-
 
             OutlinedTextField(
                 value = totalMarks,
@@ -206,124 +193,107 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-
-
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             Button(
                 onClick = {
-                    if (
-                        selectedSubjectId.isEmpty() ||
-                        title.isEmpty() ||
-                        dueDate.isEmpty()
-                    ) return@Button
-
+                    if (selectedSubject == null || title.isBlank() || dueDate.isBlank()) return@Button
                     isLoading = true
 
-                    if (selectedFileUri != null) {
+                    val subject = selectedSubject!!
+                    val subjectId = subject.subjectId
+                    val subjectName = subject.subjectName
+                    val semesterId = subject.semesterId
 
-                        val storageRef = FirebaseStorage.getInstance()
-                            .reference
-                            .child("assignments/$selectedSubjectId/${attachmentName}")
+                    val courseId = if (semesterId.startsWith("BSCIT")) "BSCIT" else "BCOM"
 
-                        storageRef.putFile(selectedFileUri!!)
-                            .continueWithTask { task ->
-                                if (!task.isSuccessful) {
-                                    task.exception?.let { throw it }
-                                }
-                                storageRef.downloadUrl
-                            }
-                            .addOnSuccessListener { downloadUrl ->
+                    val className = when {
+                        semesterId.endsWith("1") || semesterId.endsWith("2") ->
+                            if (courseId == "BSCIT") "FYBSCIT" else "FYBCOM"
 
-                                saveAssignmentToFirestore(
-                                    db,
-                                    title,
-                                    description,
-                                    selectedSubjectId,
-                                    selectedSubjectName,
-                                    facultyId,
-                                    facultyClass,
-                                    dueDate,
-                                    totalMarks,
-                                    attachmentName,
-                                    downloadUrl.toString(),
-                                    navController,
-                                    onComplete = { isLoading = false }
-                                )
-                            }
+                        semesterId.endsWith("3") || semesterId.endsWith("4") ->
+                            if (courseId == "BSCIT") "SYBSCIT" else "SYBCOM"
 
-                    } else {
-                        // No attachment
-                        saveAssignmentToFirestore(
-                            db,
-                            title,
-                            description,
-                            selectedSubjectId,
-                            selectedSubjectName,
-                            facultyId,
-                            facultyClass,
-                            dueDate,
-                            totalMarks,
-                            null,
-                            null,
-                            navController,
+                        else ->
+                            if (courseId == "BSCIT") "TYBSCIT" else "TYBCOM"
+                    }
+
+                    val uploadAndSave: (String?, String?) -> Unit = { name, url ->
+                        saveAssignment(
+                            db = db,
+                            title = title,
+                            description = description,
+                            subjectId = subjectId,
+                            subjectName = subjectName,
+                            facultyId = facultyId,
+                            courseId = courseId,
+                            semesterId = semesterId,
+                            className = className,
+                            dueDate = dueDate,
+                            totalMarks = totalMarks,
+                            attachmentName = name,
+                            attachmentUrl = url,
+                            navController = navController,
                             onComplete = { isLoading = false }
                         )
                     }
+
+                    if (selectedFileUri != null) {
+                        val ref = FirebaseStorage.getInstance()
+                            .reference.child("assignments/$subjectId/$attachmentName")
+
+                        ref.putFile(selectedFileUri!!)
+                            .continueWithTask { ref.downloadUrl }
+                            .addOnSuccessListener { uploadAndSave(attachmentName, it.toString()) }
+                    } else uploadAndSave(null, null)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading
             ) {
                 Text(if (isLoading) "Publishing..." else "Publish Assignment")
             }
-
         }
     }
+
     if (showDatePicker) {
-
-        val datePickerState = rememberDatePickerState()
-
+        val state = rememberDatePickerState()
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        val selectedMillis = datePickerState.selectedDateMillis
-                        if (selectedMillis != null) {
-                            val localDate = java.time.Instant
-                                .ofEpochMilli(selectedMillis)
-                                .atZone(java.time.ZoneId.systemDefault())
-                                .toLocalDate()
-
-                            dueDate = localDate.toString() // YYYY-MM-DD
-                        }
-                        showDatePicker = false
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let {
+                        dueDate = Instant.ofEpochMilli(it)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                            .toString()
                     }
-                ) {
-                    Text("OK")
-                }
+                    showDatePicker = false
+                }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+        ) { DatePicker(state = state) }
     }
-
 }
 
-fun saveAssignmentToFirestore(
+// ---------------- HELPERS ----------------
+fun isOddSemester(): Boolean {
+    val month = LocalDate.now().monthValue
+    return month in 6..10
+}
+
+
+
+// ---------- FIRESTORE SAVE ----------
+fun saveAssignment(
     db: FirebaseFirestore,
     title: String,
     description: String,
     subjectId: String,
     subjectName: String,
     facultyId: String,
-    facultyClass: String,
+    courseId: String,
+    semesterId: String,
+    className: String,
     dueDate: String,
     totalMarks: String,
     attachmentName: String?,
@@ -335,10 +305,12 @@ fun saveAssignmentToFirestore(
     val data = hashMapOf(
         "title" to title,
         "description" to description,
+        "courseId" to courseId,
+        "semesterId" to semesterId,
+        "class" to className,
         "subjectId" to subjectId,
         "subjectName" to subjectName,
         "facultyId" to facultyId,
-        "class" to facultyClass,
         "dueDate" to dueDate,
         "totalMarks" to totalMarks.toIntOrNull(),
         "allowLateSubmission" to false,
@@ -362,3 +334,4 @@ fun saveAssignmentToFirestore(
         }
 }
 
+// ---------- UI MODEL ----------

@@ -95,9 +95,8 @@ fun FacultyAssignmentsScreen(navController: NavHostController) {
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
                                 .clickable {
-                                    navController.navigate(
-                                        "${Routes.FACULTY_ASSIGNMENT_SUBMISSIONS}/${assignment.id}"
-                                    )
+                                    navController.navigate("faculty_assignment_detail/${assignment.id}")
+
 
                                 },
                             elevation = CardDefaults.cardElevation(6.dp)

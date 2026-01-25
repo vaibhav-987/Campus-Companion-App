@@ -2,22 +2,42 @@ package com.buildingbadd.demojc.uiscreen.student
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -32,6 +52,9 @@ fun AssignmentDetailScreen(navController: NavHostController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val db = FirebaseFirestore.getInstance()
+    var submission by remember { mutableStateOf<Map<String, Any>?>(null) }
+    var isSubmissionLoading by remember { mutableStateOf(true) }
+
 
     val assignmentId =
         navController.currentBackStackEntry
@@ -54,6 +77,16 @@ fun AssignmentDetailScreen(navController: NavHostController) {
 
     // 🔹 Fetch assignment from Firestore
     LaunchedEffect(assignmentId) {
+
+            val auth = FirebaseAuth.getInstance()
+            val db = FirebaseFirestore.getInstance()
+
+            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
+            val userDoc = db.collection("users").document(uid).get().await()
+            val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
+
+            val submissionId = "${assignmentId}_$enrollmentId"
+
         if (assignmentId == null) return@LaunchedEffect
 
         val doc = db.collection("assignments")
@@ -73,8 +106,15 @@ fun AssignmentDetailScreen(navController: NavHostController) {
             attachmentUrl = doc.getString("attachmentUrl")
         )
 
+        val doc_sub = db.collection("assignment_submissions")
+            .document(submissionId)
+            .get()
+            .await()
+
 
         isLoading = false
+        submission = doc_sub.data
+        isSubmissionLoading = false
     }
 
     // 🔹 File submission state
@@ -133,6 +173,45 @@ fun AssignmentDetailScreen(navController: NavHostController) {
                     Text("Description", style = MaterialTheme.typography.titleMedium)
                     Text(assignment!!.description)
 
+                    Divider()
+
+                    when {
+                        isSubmissionLoading -> {
+                            CircularProgressIndicator()
+                        }
+
+                        submission == null -> {
+                            Text(
+                                text = "Not submitted yet",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+
+                        submission!!["status"] == "submitted" -> {
+                            Text(
+                                text = "Submitted – Pending Evaluation",
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        submission!!["status"] == "evaluated" -> {
+                            val marks = submission!!["marks"]
+                            val remarks = submission!!["remarks"] as? String
+
+                            Text(
+                                text = "Marks: $marks",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            if (!remarks.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Remarks: $remarks")
+                            }
+                        }
+                    }
+
+
                     // ✅ DOWNLOAD (WORKING)
                     if (assignment!!.attachmentUrl != null) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -152,40 +231,47 @@ fun AssignmentDetailScreen(navController: NavHostController) {
 
                     Divider()
 
-                    Text("Submit Assignment", style = MaterialTheme.typography.titleMedium)
 
-                    Button(
-                        onClick = { filePickerLauncher.launch("*/*") },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            if (selectedFileName.isEmpty())
-                                "Choose File"
-                            else
-                                "Selected: $selectedFileName"
-                        )
-                    }
 
-                    Button(
-                        onClick = {
-                            if (selectedFileUri == null) return@Button
 
-                            isSubmitting = true
+                    if (submission == null || submission!!["status"] != "evaluated") {
 
-                            scope.launch {
-                                submitAssignment(
-                                    assignment = assignment!!,
-                                    fileUri = selectedFileUri!!,
-                                    fileName = selectedFileName
-                                )
-                                isSubmitting = false
-                                navController.popBackStack()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isSubmitting
-                    ) {
-                        Text(if (isSubmitting) "Submitting..." else "Submit Assignment")
+
+                        Text("Submit Assignment", style = MaterialTheme.typography.titleMedium)
+
+                        Button(
+                            onClick = { filePickerLauncher.launch("*/*") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                if (selectedFileName.isEmpty())
+                                    "Choose File"
+                                else
+                                    "Selected: $selectedFileName"
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                if (selectedFileUri == null) return@Button
+
+                                isSubmitting = true
+
+                                scope.launch {
+                                    submitAssignment(
+                                        assignment = assignment!!,
+                                        fileUri = selectedFileUri!!,
+                                        fileName = selectedFileName
+                                    )
+                                    isSubmitting = false
+                                    navController.popBackStack()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSubmitting
+                        ) {
+                            Text(if (isSubmitting) "Submitting..." else "Submit Assignment")
+                        }
                     }
                 }
             }
