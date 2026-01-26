@@ -31,7 +31,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun SignupScreen(navController: NavHostController) {
 
-    // 🔹 Form fields
+    // Form fields
     var enrollmentId by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -43,8 +43,10 @@ fun SignupScreen(navController: NavHostController) {
     var dobAdd by remember { mutableStateOf("")}
     var showDatePicker by remember { mutableStateOf(false)}
 
+    var gender by remember { mutableStateOf("") }
 
-    // 🔹 Fake OTP state
+
+    // Fake OTP state
     var otpSent by remember { mutableStateOf(false) }
     var otp by remember { mutableStateOf("") }
 
@@ -63,7 +65,7 @@ fun SignupScreen(navController: NavHostController) {
             Text("Sign Up", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 🔹 Enrollment ID
+            // Enrollment ID
             OutlinedTextField(
                 value = enrollmentId,
                 onValueChange = { enrollmentId = it },
@@ -84,7 +86,7 @@ fun SignupScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 🔹 Name
+            // Name
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -129,9 +131,16 @@ fun SignupScreen(navController: NavHostController) {
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            GenderDropdown(
+                selectedGender = gender,
+                onGenderSelected = { gender = it }
+            )
 
 
-            // 🔹 Phone
+
+            // Phone
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
@@ -152,7 +161,7 @@ fun SignupScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 🔹 Email
+            // Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -172,7 +181,7 @@ fun SignupScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 🔹 Password
+            // Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -193,7 +202,7 @@ fun SignupScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 🔹 Confirm Password
+            // Confirm Password
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -250,11 +259,15 @@ fun SignupScreen(navController: NavHostController) {
             }
 
 
-            // 🔹 SIGN UP BUTTON
             Button(
                 onClick = {
                     if (password != confirmPassword) {
                         Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    if (gender.isBlank()) {
+                        Toast.makeText(context, "Please select gender", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
 
@@ -309,7 +322,6 @@ fun SignupScreen(navController: NavHostController) {
                 Text("Sign Up")
             }
 
-            // 🔹 FAKE OTP UI
             if (otpSent) {
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -333,6 +345,7 @@ fun SignupScreen(navController: NavHostController) {
                                 name = name,
                                 phone = phone,
                                 dob = dobAdd,
+                                gender = gender,
                                 studentClass = studentClass,
                                 courseId = courseId,
                                 context = context,
@@ -358,6 +371,7 @@ fun createUserAfterFakeOtp(
     name: String,
     phone: String,
     dob: String,
+    gender: String,
     studentClass: String,
     courseId: String,
     context: Context,
@@ -371,7 +385,6 @@ fun createUserAfterFakeOtp(
 
             val uid = result.user!!.uid
 
-            // 🔹 1. users collection (auth + role)
             val userData = hashMapOf(
                 "uid" to uid,
                 "email" to email,
@@ -384,13 +397,13 @@ fun createUserAfterFakeOtp(
                 studentClass = studentClass
             )
 
-            // 🔹 2. students_detail collection (profile)
             val studentDetail = hashMapOf(
                 "enrollmentId" to enrollmentId,
                 "name" to name,
                 "email" to email,
                 "phone" to phone,
                 "dob" to dob,
+                "gender" to gender,
                 "course" to courseId,
                 "class" to studentClass,
                 "currentSemesterId" to semesterId
@@ -403,7 +416,7 @@ fun createUserAfterFakeOtp(
                 .addOnSuccessListener {
 
                     db.collection("students_detail")
-                        .document(enrollmentId) // 👈 use enrollmentId as doc ID
+                        .document(enrollmentId)
                         .set(studentDetail)
                         .addOnSuccessListener {
 
@@ -451,5 +464,58 @@ fun calculateSemesterId(
             if (isSemOdd) "${courseId}_SEM_5" else "${courseId}_SEM_6"
 
         else -> ""
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GenderDropdown(
+    selectedGender: String,
+    onGenderSelected: (String) -> Unit
+) {
+    val genderOptions = listOf("Male", "Female", "Other")
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedGender,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Gender") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+                .padding(10.dp, 7.dp, 10.dp, 0.dp),
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.DarkGray,
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            )
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            genderOptions.forEach { gender ->
+                DropdownMenuItem(
+                    text = { Text(gender) },
+                    onClick = {
+                        onGenderSelected(gender)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }
