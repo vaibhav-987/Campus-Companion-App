@@ -49,6 +49,7 @@ fun MarkAttendanceScreen(
         navController.currentBackStackEntry?.arguments?.getString("subjectId") ?: return
     val startTime =
         navController.currentBackStackEntry?.arguments?.getString("startTime") ?: return
+    val facultyId = navController.currentBackStackEntry?.arguments?.getString("facultyId") ?: return
 
     val today = LocalDate.now().toString()
 
@@ -166,7 +167,7 @@ fun MarkAttendanceScreen(
                                 timetableId = timetableId,
                                 className = className,
                                 subjectId = subjectId,
-                                facultyId = auth.currentUser!!.uid,
+                                facultyId = facultyId,
                                 date = today,
                                 startTime = startTime,
                                 records = attendanceMap

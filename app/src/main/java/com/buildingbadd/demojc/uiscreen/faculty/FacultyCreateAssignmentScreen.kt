@@ -40,7 +40,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
     var subjectDropdownExpanded by remember { mutableStateOf(false) }
 
     var facultyId by remember { mutableStateOf("") }
-    var facultyClass by remember { mutableStateOf("") }
+//    var facultyClass by remember { mutableStateOf("") }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
@@ -81,13 +81,14 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 if (isOddSemester) semesterNo % 2 == 1 else semesterNo % 2 == 0
 
             if (!validSemester) continue
+            val courseId = subjectDoc.getString("courseId") ?: ""
 
             filteredSubjects.add(
                 FacultySubjectUI(
                     subjectId = subjectId,
                     subjectName = subjectDoc.getString("name") ?: "",
                     semesterId = semesterId,
-                    courseId = TODO()
+                    courseId = courseId
                 )
             )
         }

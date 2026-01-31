@@ -12,7 +12,7 @@ sealed class FacultyBottomNavItem(
     val icon: ImageVector
 ) {
     object Dashboard : FacultyBottomNavItem(
-        route = "faculty_home",
+        route = Routes.FACULTY_HOME,
         title = "Home",
         icon = Icons.Default.Home
     )

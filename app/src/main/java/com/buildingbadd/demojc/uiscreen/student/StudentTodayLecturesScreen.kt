@@ -89,7 +89,8 @@ fun StudentTodayLecturesScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Today's Lectures") })
-        }
+        },
+        bottomBar = { StudentBottomNavBar(navController) }
     ) { padding ->
 
         Box(

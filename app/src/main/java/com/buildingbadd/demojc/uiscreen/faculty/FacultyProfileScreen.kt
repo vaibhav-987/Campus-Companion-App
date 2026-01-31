@@ -14,14 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
@@ -50,136 +45,186 @@ fun FacultyProfileScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
-    var name by remember { mutableStateOf("") }
-    var facultyId by remember { mutableStateOf("") }
-    var department by remember { mutableStateOf("") }
-    var assignedClass by remember { mutableStateOf("") }
-    var subjects by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var profile by remember { mutableStateOf<FacultyProfile?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        try {
-            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
+        val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-            // 1️⃣ Get facultyId from users
-            val userDoc = db.collection("users").document(uid).get().await()
-            facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
+        val userDoc = db.collection("users").document(uid).get().await()
+        val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
+        val email = userDoc.getString("email") ?: ""
 
-            // 2️⃣ Get faculty details
-            val facultyDoc =
-                db.collection("faculty_details").document(facultyId).get().await()
+        val facultyDoc =
+            db.collection("faculty_details").document(facultyId).get().await()
 
-            name = facultyDoc.getString("name") ?: ""
-            department = facultyDoc.getString("department") ?: ""
-            assignedClass = facultyDoc.getString("assignedClasses") ?: ""
+        val assignedClasses =
+            facultyDoc.get("assignedClasses") as? List<String> ?: emptyList()
 
-            val subjectIds = facultyDoc.get("subjects") as? List<String> ?: emptyList()
+        val subjectIds =
+            facultyDoc.get("assignedSubjectIds") as? List<String> ?: emptyList()
 
-            // 3️⃣ Fetch subject names
-            val subjectList = mutableListOf<Pair<String, String>>()
-            for (id in subjectIds) {
-                val subjectDoc = db.collection("subjects").document(id).get().await()
-                val subjectName = subjectDoc.getString("subjectName") ?: id
-                subjectList.add(id to subjectName)
-            }
-
-            subjects = subjectList
-
-        } finally {
-            isLoading = false
+        val subjects = mutableListOf<Pair<String, String>>()
+        for (id in subjectIds) {
+            val subjectDoc = db.collection("subjects").document(id).get().await()
+            subjects.add(
+                id to (subjectDoc.getString("name") ?: id)
+            )
         }
+
+        profile = FacultyProfile(
+            facultyId = facultyId,
+            name = facultyDoc.getString("name") ?: "",
+            department = facultyDoc.getString("department") ?: "",
+            email = email,
+            assignedClasses = assignedClasses,
+            subjects = subjects
+        )
+
+        isLoading = false
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("My Profile") })
-        },
-        bottomBar = {
-            FacultyBottomNavBar(navController)
-        }
+        topBar = { TopAppBar(title = { Text("My Profile") }) },
+        bottomBar = { FacultyBottomNavBar(navController) }
     ) { padding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            } else {
-
-                FacultyProfileHeader(name, facultyId)
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                FacultyQuickStats(department, assignedClass, subjects.size)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                FacultySubjectsSection(subjects)
+            when {
+                isLoading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                profile != null -> FacultyProfileContent(profile!!)
             }
         }
     }
 }
 
+data class FacultyProfile(
+    val facultyId: String,
+    val name: String,
+    val department: String,
+    val email: String,
+    val assignedClasses: List<String>,
+    val subjects: List<Pair<String, String>>
+)
 
 @Composable
-fun FacultyProfileHeader(name: String, facultyId: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun FacultyProfileContent(profile: FacultyProfile) {
 
-        Box {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(Color.LightGray)
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+
+        FacultyProfileHeader(profile)
+
+        FacultyStatsRow(
+            classesCount = profile.assignedClasses.size,
+            subjectsCount = profile.subjects.size
+        )
+
+        FacultyInfoCard(profile)
+
+        FacultySubjectsSection(profile.subjects)
+    }
+}
+
+@Composable
+fun FacultyProfileHeader(profile: FacultyProfile) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp), // ✅ extra breathing space
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        // Avatar
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = profile.name.take(1).uppercase(),
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White
             )
-
-            IconButton(
-                onClick = { /* upload photo later */ },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .background(Color.White, CircleShape)
-            ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = "Change Photo")
-            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(name, style = MaterialTheme.typography.titleLarge)
-        Text("Faculty ID: $facultyId", color = Color.Gray)
+        Text(
+            text = profile.name,
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Text(
+            text = "Faculty ID: ${profile.facultyId}",
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = profile.department,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
 
 @Composable
-fun FacultyQuickStats(department: String, assignedClass: String, subjectCount: Int) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
+fun FacultyStatsRow(classesCount: Int, subjectsCount: Int) {
+
+    Card(elevation = CardDefaults.cardElevation(4.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            QuickStatItem("Department", department)
-            QuickStatItem("Class", assignedClass)
-            QuickStatItem("Subjects", subjectCount.toString())
+            StatItem(classesCount.toString(), "Classes")
+            StatItem(subjectsCount.toString(), "Subjects")
         }
     }
 }
 
 @Composable
-fun QuickStatItem(label: String, value: String) {
+fun StatItem(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, fontWeight = FontWeight.Bold)
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.titleLarge)
+        Text(label, color = Color.Gray)
+    }
+}
+
+@Composable
+fun FacultyInfoCard(profile: FacultyProfile) {
+
+    Card(elevation = CardDefaults.cardElevation(4.dp)) {
+        Column(Modifier.padding(16.dp)) {
+
+            Text("Faculty Information", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(12.dp))
+
+            InfoRow("Department", profile.department)
+            InfoRow("Email", profile.email)
+        }
+    }
+}
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, color = Color.Gray)
+        Text(value)
     }
 }
 
@@ -187,44 +232,25 @@ fun QuickStatItem(label: String, value: String) {
 fun FacultySubjectsSection(subjects: List<Pair<String, String>>) {
 
     Column {
-
         Text(
-            text = "Subjects Assigned",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 12.dp)
+            "Subjects Assigned",
+            style = MaterialTheme.typography.titleMedium
         )
 
-        subjects.forEach { (subjectId, subjectName) ->
+        Spacer(Modifier.height(12.dp))
 
+        subjects.forEach { (id, name) ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 6.dp),
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
-
-                    Text(
-                        text = subjectName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Code: $subjectId",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column(Modifier.padding(16.dp)) {
+                    Text(name, style = MaterialTheme.typography.titleMedium)
+                    Text("Code: $id", color = Color.Gray)
                 }
             }
         }
     }
 }
-
-

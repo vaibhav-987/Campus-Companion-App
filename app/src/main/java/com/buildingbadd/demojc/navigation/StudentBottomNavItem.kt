@@ -12,7 +12,7 @@ sealed class StudentBottomNavItem(
     val icon: ImageVector
 ) {
     object Dashboard : StudentBottomNavItem(
-        route = "student_home",
+        route = Routes.STUDENT_HOME,
         title = "Home",
         icon = Icons.Default.Home
     )
@@ -24,7 +24,7 @@ sealed class StudentBottomNavItem(
     )
 
     object Profile : StudentBottomNavItem(
-        route = "student_profile",
+        route = Routes.STUDENT_PROFILE,
         title = "Profile",
         icon = Icons.Default.AccountCircle
     )

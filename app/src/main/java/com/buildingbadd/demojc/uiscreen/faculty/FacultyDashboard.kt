@@ -142,6 +142,9 @@ fun FacultyDashboard(navController: NavHostController) {
                         title = "Take Attendance",
                         route = "faculty_attendance"
                     ),FacultyDashboardItem(
+                        title = "Attendance Summary",
+                        route = "attendance_summary"
+                    ),FacultyDashboardItem(
                         title = "Create Assignment",
                         route = "faculty_create_assignment"
                     ),FacultyDashboardItem(

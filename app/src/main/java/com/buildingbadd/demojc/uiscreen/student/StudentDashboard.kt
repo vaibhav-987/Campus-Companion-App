@@ -100,38 +100,38 @@ fun StudentDashboard(navController: NavHostController) {
             title = "Schedules",
             iconRes = R.drawable.ic_presentation,
             onClick = {navController.navigate("student_lectures") }
-        ),
-        DashboardItem(
-            title = "Feedback",
-            iconRes = R.drawable.ic_feedback,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-        ),
-        DashboardItem(
-            title = "My Courses",
-            iconRes = R.drawable.ic_courses,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-        ),
-        DashboardItem(
-            title = "Library",
-            iconRes = R.drawable.ic_library,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-        ),
-        DashboardItem(
-            title = "Test",
-            iconRes = R.drawable.ic_test,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-        ),
-
-        DashboardItem(
-            title = "Announcements",
-            iconRes = R.drawable.ic_announcement,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-        ),
-        DashboardItem(
-            title = "Resources",
-            iconRes = R.drawable.ic_resources,
-            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
         )
+//        DashboardItem(
+//            title = "Feedback",
+//            iconRes = R.drawable.ic_feedback,
+//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+//        ),
+//        DashboardItem(
+//            title = "My Courses",
+//            iconRes = R.drawable.ic_courses,
+//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+//        ),
+//        DashboardItem(
+//            title = "Library",
+//            iconRes = R.drawable.ic_library,
+//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+//        ),
+//        DashboardItem(
+//            title = "Test",
+//            iconRes = R.drawable.ic_test,
+//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+//        ),
+//
+//        DashboardItem(
+//            title = "Announcements",
+//            iconRes = R.drawable.ic_announcement,
+//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+//        ),
+//        DashboardItem(
+//            title = "Resources",
+//            iconRes = R.drawable.ic_resources,
+//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+//        )
     )
 
     Scaffold(

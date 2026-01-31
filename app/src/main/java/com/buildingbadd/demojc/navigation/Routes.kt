@@ -28,6 +28,13 @@ object Routes {
     const val FACULTY_ASSIGNMENTS_GIVEN = "faculty_assignments_given"
     const val FACULTY_ASSIGNMENT_SUBMISSIONS = "faculty_assignment_submissions"
     const val FACULTY_ASSIGNMENTS = "faculty_assignments"
+    const val ATTENDANCE_SUMMARY = "attendance_summary"
+    const val ATTENDANCE_DETAIL = "attendance_detail/{attendanceId}"
+    const val FACULTY_NOTES_HISTORY = "faculty_notes_history"
+//    const val ATTENDANCE_SUMMARY = "attendance_summary"
+//    const val ATTENDANCE_DETAIL = "attendance_detail/{attendanceId}"
+
+
 
     // Admin
     const val ADMIN_APPROVAL = "admin_approval"

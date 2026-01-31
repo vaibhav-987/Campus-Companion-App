@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -99,7 +101,19 @@ fun FacultyUploadNotesScreen(navController: NavHostController) {
 
     // ---------------- UI ----------------
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Upload Notes") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Upload Notes") },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Routes.FACULTY_NOTES_HISTORY) }) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Notes History"
+                        )
+                    }
+                },
+            )
+        },
         bottomBar = { FacultyBottomNavBar(navController) }
     ) { padding ->
 
@@ -124,7 +138,9 @@ fun FacultyUploadNotesScreen(navController: NavHostController) {
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(subjectExpanded)
                     },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
                 )
 
                 ExposedDropdownMenu(
@@ -194,9 +210,6 @@ fun FacultyUploadNotesScreen(navController: NavHostController) {
     }
 }
 
-/* ---------------------------------------------------
-   FIREBASE UPLOAD
---------------------------------------------------- */
 
 fun uploadNotes(
     subject: FacultySubjectUI,
@@ -211,40 +224,60 @@ fun uploadNotes(
     val storage = FirebaseStorage.getInstance()
     val auth = FirebaseAuth.getInstance()
 
-    val facultyId = auth.currentUser!!.uid
+    val uid = auth.currentUser?.uid ?: return
 
-    val ref =
-        storage.reference.child("notes/${subject.subjectId}/$fileName")
+    // 1️⃣ Fetch facultyId safely
+    db.collection("users")
+        .document(uid)
+        .get()
+        .addOnSuccessListener { userDoc ->
 
-    ref.putFile(fileUri)
-        .continueWithTask { ref.downloadUrl }
-        .addOnSuccessListener { url ->
+            if (!userDoc.exists()) {
+                onComplete()
+                return@addOnSuccessListener
+            }
 
-            val data = hashMapOf(
-                "title" to title,
-                "courseId" to subject.courseId,
-                "semesterId" to subject.semesterId,
-                "subjectId" to subject.subjectId,
-                "subjectName" to subject.subjectName,
-                "facultyId" to facultyId,
-                "fileName" to fileName,
-                "fileUrl" to url.toString(),
-                "uploadedAt" to System.currentTimeMillis(),
-                "status" to "active"
-            )
+            val facultyId = userDoc.getString("facultyId")
 
-            db.collection("notes")
-                .add(data)
-                .addOnSuccessListener {
-                    onComplete()
-                    navController.popBackStack()
+            if (facultyId.isNullOrBlank()) {
+                onComplete()
+                return@addOnSuccessListener
+            }
+
+            // 2️⃣ Upload file
+            val ref = storage.reference
+                .child("notes/${subject.subjectId}/$fileName")
+
+            ref.putFile(fileUri)
+                .continueWithTask { ref.downloadUrl }
+                .addOnSuccessListener { url ->
+
+                    val data = hashMapOf(
+                        "title" to title,
+                        "courseId" to subject.courseId,
+                        "semesterId" to subject.semesterId,
+                        "subjectId" to subject.subjectId,
+                        "subjectName" to subject.subjectName,
+                        "facultyId" to facultyId, // ✅ REAL facultyId
+                        "fileName" to fileName,
+                        "fileUrl" to url.toString(),
+                        "uploadedAt" to System.currentTimeMillis(),
+                        "status" to "active"
+                    )
+
+                    db.collection("notes")
+                        .add(data)
+                        .addOnSuccessListener {
+                            onComplete()
+                            navController.popBackStack()
+                        }
                 }
+        }
+        .addOnFailureListener {
+            onComplete()
         }
 }
 
-/* ---------------------------------------------------
-   HELPERS
---------------------------------------------------- */
 
 enum class SemesterType { ODD, EVEN }
 

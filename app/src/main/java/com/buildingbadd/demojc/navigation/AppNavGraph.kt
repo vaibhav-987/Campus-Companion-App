@@ -14,6 +14,8 @@ import com.buildingbadd.demojc.uiscreen.auth.PendingApprovalScreen
 import com.buildingbadd.demojc.uiscreen.auth.SignupScreen
 import com.buildingbadd.demojc.uiscreen.faculty.AssignmentGivenScreen
 import com.buildingbadd.demojc.uiscreen.faculty.AssignmentSubmissionsScreen
+import com.buildingbadd.demojc.uiscreen.faculty.AttendanceDetailScreen
+import com.buildingbadd.demojc.uiscreen.faculty.AttendanceSummaryScreen
 import com.buildingbadd.demojc.uiscreen.faculty.EvaluateAssignmentScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAssignmentDetailScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAssignmentsScreen
@@ -24,6 +26,7 @@ import com.buildingbadd.demojc.uiscreen.student.StudentNotesScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAssignmentsScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentReportsScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyDashboard
+import com.buildingbadd.demojc.uiscreen.faculty.FacultyNotesHistoryScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyProfileScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyUploadNotesScreen
 import com.buildingbadd.demojc.uiscreen.faculty.MarkAttendanceScreen
@@ -156,6 +159,25 @@ fun AppNavGraph(
             FacultyCreateAssignmentScreen(navController)
         }
 
+
+
+        composable(Routes.ATTENDANCE_SUMMARY) {
+            AttendanceSummaryScreen(navController)
+        }
+
+        composable(
+            route = Routes.ATTENDANCE_DETAIL,
+            arguments = listOf(
+                navArgument("attendanceId") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            AttendanceDetailScreen(
+                navController = navController,
+                attendanceId = it.arguments?.getString("attendanceId")!!
+            )
+        }
         composable(Routes.FACULTY_UPLOAD_NOTES) {
             FacultyUploadNotesScreen(navController)
         }
@@ -166,6 +188,10 @@ fun AppNavGraph(
 
         composable(Routes.FACULTY_ASSIGNMENTS) {
             FacultyAssignmentsScreen(navController)
+        }
+
+        composable(Routes.FACULTY_NOTES_HISTORY) {
+            FacultyNotesHistoryScreen(navController)
         }
 
         composable(
@@ -190,6 +216,16 @@ fun AppNavGraph(
             )
         }
 
+        composable(
+            route = "attendance_detail/{attendanceId}"
+        ) { backStackEntry ->
+            val attendanceId = backStackEntry.arguments?.getString("attendanceId")!!
+            AttendanceDetailScreen(
+                navController = navController,
+                attendanceId = attendanceId
+            )
+        }
+
 
         composable(
             route = "evaluate_assignment/{submissionId}",
@@ -209,10 +245,18 @@ fun AppNavGraph(
         }
 
         composable(
-            route = "mark_attendance/{timetableId}/{className}/{subjectId}/{startTime}"
+            route = "mark_attendance/{timetableId}/{className}/{subjectId}/{startTime}/{facultyId}",
+            arguments = listOf(
+                navArgument("timetableId") { type = NavType.StringType },
+                navArgument("className") { type = NavType.StringType },
+                navArgument("subjectId") { type = NavType.StringType },
+                navArgument("startTime") { type = NavType.StringType },
+                navArgument("facultyId") { type = NavType.StringType }
+            )
         ) {
             MarkAttendanceScreen(navController)
         }
+
 
         composable(
             route = "student_notes_subject/{subjectId}",

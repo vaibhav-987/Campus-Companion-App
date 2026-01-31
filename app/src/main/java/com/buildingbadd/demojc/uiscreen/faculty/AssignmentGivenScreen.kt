@@ -23,7 +23,7 @@ fun AssignmentGivenScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
-    var assignments by remember { mutableStateOf<List<Assignment>>(emptyList()) }
+    var assignments by remember { mutableStateOf<List<AssignmentWithStats>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -32,13 +32,16 @@ fun AssignmentGivenScreen(navController: NavHostController) {
         val userDoc = db.collection("users").document(uid).get().await()
         val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
 
-        val snapshot = db.collection("assignments")
+        val assignmentSnapshot = db.collection("assignments")
             .whereEqualTo("facultyId", facultyId)
             .get()
             .await()
 
-        assignments = snapshot.documents.map { doc ->
-            Assignment(
+        val result = mutableListOf<AssignmentWithStats>()
+
+        for (doc in assignmentSnapshot.documents) {
+
+            val assignment = Assignment(
                 id = doc.id,
                 title = doc.getString("title") ?: "",
                 description = doc.getString("description") ?: "",
@@ -49,11 +52,33 @@ fun AssignmentGivenScreen(navController: NavHostController) {
                 attachmentName = doc.getString("attachmentName"),
                 attachmentUrl = doc.getString("attachmentUrl")
             )
+
+            // 🔹 total students of class
+            val totalStudents = db.collection("students_detail")
+                .whereEqualTo("class", assignment.className)
+                .get()
+                .await()
+                .size()
+
+            // 🔹 submissions count
+            val submittedCount = db.collection("assignment_submissions")
+                .whereEqualTo("assignmentId", assignment.id)
+                .get()
+                .await()
+                .size()
+
+            result.add(
+                AssignmentWithStats(
+                    assignment = assignment,
+                    submittedCount = submittedCount,
+                    totalStudents = totalStudents
+                )
+            )
         }
 
+        assignments = result
         isLoading = false
     }
-
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Assignments Given") })
@@ -78,7 +103,8 @@ fun AssignmentGivenScreen(navController: NavHostController) {
                     )
 
                 else -> LazyColumn {
-                    items(assignments) { assignment ->
+                    items(assignments) { item ->
+                        val assignment = item.assignment
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -92,18 +118,28 @@ fun AssignmentGivenScreen(navController: NavHostController) {
                             elevation = CardDefaults.cardElevation(6.dp)
                         ) {
                             Column(Modifier.padding(16.dp)) {
-                                Text(
-                                    assignment.title,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Text(assignment.title, style = MaterialTheme.typography.titleMedium)
                                 Text("Class: ${assignment.className}")
                                 Text("Subject: ${assignment.subjectName}")
                                 Text("Due: ${assignment.dueDate}")
-                            }
-                        }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Text(
+                                    text = "${item.submittedCount} / ${item.totalStudents} students submitted",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }                        }
                     }
                 }
             }
         }
     }
 }
+
+data class AssignmentWithStats(
+    val assignment: Assignment,
+    val submittedCount: Int,
+    val totalStudents: Int
+)

@@ -34,27 +34,25 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FacultyAttendanceScreen(navController: NavHostController) {
 
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
+    var facultyId by remember { mutableStateOf("") }
 
     var lectures by remember { mutableStateOf<List<LectureUI>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-
-    val today = remember {
-        java.time.LocalDate.now().dayOfWeek.name // MONDAY
-    }
 
     LaunchedEffect(Unit) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
             val userDoc = db.collection("users").document(uid).get().await()
-            val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
+
+            val fetchedFacultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
+            facultyId = fetchedFacultyId
 
             val snapshot = db.collection("timetables").get().await()
 
@@ -123,7 +121,7 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
                     items(lectures) { lecture ->
                         LectureCard(lecture) {
                             // Suggested: Include subjectId to make the Attendance record unique
-                            navController.navigate("mark_attendance/${lecture.timetableId}/${lecture.className}/${lecture.subjectId}/${lecture.startTime}")
+                            navController.navigate("mark_attendance/${lecture.timetableId}/${lecture.className}/${lecture.subjectId}/${lecture.startTime}/$facultyId")
                         }
                     }
                 }

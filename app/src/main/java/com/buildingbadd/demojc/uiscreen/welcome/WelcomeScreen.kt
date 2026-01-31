@@ -87,37 +87,29 @@ fun WelcomeScreen(navController: NavHostController) {
 
             Spacer(Modifier.height(32.dp))
 
-            // This is the button to trigger adding subjects
-            // In WelcomeScreen.kt
 
-            // In WelcomeScreen.kt
-
-// ...
-
-// This is the button to trigger adding subjects
-            Button(onClick = {
-                // ✅ FIX: Call the function with the 'context' variable you defined earlier.
-                updateFacultySubjects(context) { success ->
-                    if (success) {
-                        // Handle success (e.g., show a Toast)
-                    } else {
-                        // Handle failure
-                    }
-                }
-            }) {
-                Text("Initialize Subject Data (Admin)")
-            }
-
-// ...
+//// ...
+//
+//            Button(onClick = {
+//                updateFacultySubjects(context) { success ->
+//                    if (success) {
+//                        // Handle success (e.g., show a Toast)
+//                    } else {
+//                        // Handle failure
+//                    }
+//                }
+//            }) {
+//                Text("Initialize Subject Data (Admin)")
+//            }
+//
+//// ...
 
 
 
 
-            // 🔥 This pushes the illustration to the bottom
             Spacer(modifier = Modifier.weight(1f))
         }
 
-        // 🔹 Bottom Illustration
         Image(
             painter = painterResource(id = R.drawable.download),
             contentDescription = "Students Illustration",
