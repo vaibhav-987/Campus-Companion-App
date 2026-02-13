@@ -151,7 +151,7 @@ fun FacultyDashboard(navController: NavHostController) {
                         title = "Upload Notes",
                         route = "faculty_upload_notes"
                     ),FacultyDashboardItem(
-                        title = "Assignment Given",
+                        title = "Check Assignments",
                         route = Routes.FACULTY_ASSIGNMENTS_GIVEN
                     ),FacultyDashboardItem(
                         title = "My Assignments",

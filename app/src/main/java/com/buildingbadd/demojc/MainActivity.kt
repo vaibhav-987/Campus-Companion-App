@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                                 startDestination = when (role) {
                                     "student" -> "student_home"
                                     "faculty" -> "faculty_home"
-                                    "admin" -> "admin_approval"
+                                    "admin" -> "admin_home"
                                     else -> "welcome"
                                 }
                             }

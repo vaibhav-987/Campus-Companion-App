@@ -349,6 +349,7 @@ fun SignupScreen(navController: NavHostController) {
                                 studentClass = studentClass,
                                 courseId = courseId,
                                 context = context,
+                                isActive = true,
                                 navController = navController
                             )
                         } else {
@@ -375,6 +376,7 @@ fun createUserAfterFakeOtp(
     studentClass: String,
     courseId: String,
     context: Context,
+    isActive: Boolean,
     navController: NavHostController
 ) {
     val auth = FirebaseAuth.getInstance()
@@ -406,7 +408,8 @@ fun createUserAfterFakeOtp(
                 "gender" to gender,
                 "course" to courseId,
                 "class" to studentClass,
-                "currentSemesterId" to semesterId
+                "currentSemesterId" to semesterId,
+                "isActive" to isActive
             )
 
             // Save both

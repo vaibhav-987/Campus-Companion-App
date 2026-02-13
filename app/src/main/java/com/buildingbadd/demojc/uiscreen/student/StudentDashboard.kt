@@ -100,7 +100,7 @@ fun StudentDashboard(navController: NavHostController) {
             title = "Schedules",
             iconRes = R.drawable.ic_presentation,
             onClick = {navController.navigate("student_lectures") }
-        )
+        ),
 //        DashboardItem(
 //            title = "Feedback",
 //            iconRes = R.drawable.ic_feedback,
@@ -116,17 +116,17 @@ fun StudentDashboard(navController: NavHostController) {
 //            iconRes = R.drawable.ic_library,
 //            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
 //        ),
-//        DashboardItem(
-//            title = "Test",
-//            iconRes = R.drawable.ic_test,
-//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-//        ),
-//
-//        DashboardItem(
-//            title = "Announcements",
-//            iconRes = R.drawable.ic_announcement,
-//            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
-//        ),
+        DashboardItem(
+            title = "Test",
+            iconRes = R.drawable.ic_test,
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+        ),
+
+        DashboardItem(
+            title = "Announcements",
+            iconRes = R.drawable.ic_announcement,
+            onClick = {Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show() }
+        )
 //        DashboardItem(
 //            title = "Resources",
 //            iconRes = R.drawable.ic_resources,
@@ -225,7 +225,7 @@ fun DashboardGridItem(item: DashboardItem) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                   // .background(Color.DarkGray),
+                // .background(Color.DarkGray),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

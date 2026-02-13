@@ -35,7 +35,17 @@ object Routes {
 //    const val ATTENDANCE_DETAIL = "attendance_detail/{attendanceId}"
 
 
-
     // Admin
-    const val ADMIN_APPROVAL = "admin_approval"
+//    const val ADMIN_APPROVAL = "admin_approval"
+    const val ADMIN_HOME = "admin_home"
+    const val ADMIN_STUDENTS = "admin_students"
+//    const val ADMIN_ADD_STUDENT = "admin_add_students"
+    const val ADMIN_FACULTY = "admin_faculty"
+    const val ADMIN_FACULTY_LIST = "admin_faculty_list"
+    const val ADMIN_PROFILE = "admin_profile"
+    const val ADMIN_STUDENT_LIST = "admin_students_list"
+    const val ADMIN_STUDENT_DETAILS = "admin_student_details"
+    const val ADMIN_ADD_STUDENT = "admin_add_student"
+    const val ADMIN_YEAR_LIST = "admin_year_list"
+
 }

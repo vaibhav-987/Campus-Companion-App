@@ -1,14 +1,20 @@
 package com.buildingbadd.demojc.navigation
 
-
-import com.buildingbadd.demojc.uiscreen.faculty.FacultyCreateAssignmentScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.buildingbadd.demojc.uiscreen.admin.AdminApprovalScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminAddStudentScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminDashboardScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminFacultyDetailsScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminFacultyListScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminManageStudentsScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminProfileScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminStudentDetailsScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminStudentListScreen
+import com.buildingbadd.demojc.uiscreen.admin.AdminYearSelectionScreen
 import com.buildingbadd.demojc.uiscreen.auth.LoginScreen
 import com.buildingbadd.demojc.uiscreen.auth.PendingApprovalScreen
 import com.buildingbadd.demojc.uiscreen.auth.SignupScreen
@@ -20,26 +26,24 @@ import com.buildingbadd.demojc.uiscreen.faculty.EvaluateAssignmentScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAssignmentDetailScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAssignmentsScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyAttendanceScreen
-import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceScreen
-import com.buildingbadd.demojc.uiscreen.student.StudentDashboard
-import com.buildingbadd.demojc.uiscreen.student.StudentNotesScreen
-import com.buildingbadd.demojc.uiscreen.student.StudentAssignmentsScreen
-import com.buildingbadd.demojc.uiscreen.student.StudentReportsScreen
+import com.buildingbadd.demojc.uiscreen.faculty.FacultyCreateAssignmentScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyDashboard
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyNotesHistoryScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyProfileScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyUploadNotesScreen
 import com.buildingbadd.demojc.uiscreen.faculty.MarkAttendanceScreen
 import com.buildingbadd.demojc.uiscreen.student.AssignmentDetailScreen
-import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceOverviewScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentAssignmentsScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceHistoryScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceOverviewScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentDashboard
 import com.buildingbadd.demojc.uiscreen.student.StudentNotesBySubjectScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentProfileScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentSubjectsScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentTodayLecturesScreen
 import com.buildingbadd.demojc.uiscreen.welcome.WelcomeScreen
 
-// 1. Create a top-level Composable function to hold the graph
 
 @Composable
 fun AppNavGraph(
@@ -71,9 +75,77 @@ fun AppNavGraph(
 
         /* ---------------- ADMIN ---------------- */
 
-        composable(Routes.ADMIN_APPROVAL) {
-            AdminApprovalScreen(navController)
+        composable(Routes.ADMIN_HOME) {
+            AdminDashboardScreen(navController)
         }
+
+        composable(Routes.ADMIN_FACULTY) {
+            AdminFacultyListScreen(navController)
+        }
+
+        composable("admin_faculty_list") {
+            AdminFacultyListScreen(navController)
+        }
+
+        composable("admin_faculty_details/{facultyId}") { backStackEntry ->
+            val facultyId =
+                backStackEntry.arguments?.getString("facultyId") ?: ""
+
+            AdminFacultyDetailsScreen(navController, facultyId)
+        }
+
+        composable(Routes.ADMIN_PROFILE) {
+            AdminProfileScreen(navController)
+        }
+
+        composable(Routes.ADMIN_STUDENTS) {
+            AdminManageStudentsScreen(navController)
+        }
+
+
+        composable(Routes.ADMIN_ADD_STUDENT) {
+            AdminAddStudentScreen(navController)
+        }
+
+        composable(
+            route = "admin_students_list/{courseId}/{year}"
+        ) { backStackEntry ->
+
+            val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+            val year = backStackEntry.arguments?.getString("year") ?: ""
+
+            AdminStudentListScreen(
+                navController = navController,
+                courseId = courseId,
+                year = year
+            )
+        }
+
+        composable(
+            route = "admin_student_details/{enrollmentId}"
+        ) { backStackEntry ->
+
+            val enrollmentId =
+                backStackEntry.arguments?.getString("enrollmentId") ?: ""
+
+            AdminStudentDetailsScreen(
+                navController = navController,
+                enrollmentId = enrollmentId
+            )
+        }
+
+        composable(
+            route = "admin_year_list/{courseId}"
+        ) { backStackEntry ->
+
+            val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+
+            AdminYearSelectionScreen(
+                navController = navController,
+                courseId = courseId
+            )
+        }
+
 
         /* ---------------- STUDENT ---------------- */
 
@@ -245,13 +317,14 @@ fun AppNavGraph(
         }
 
         composable(
-            route = "mark_attendance/{timetableId}/{className}/{subjectId}/{startTime}/{facultyId}",
+            route = "mark_attendance/{timetableId}/{className}/{subjectId}/{startTime}/{facultyId}/{semesterId}",
             arguments = listOf(
                 navArgument("timetableId") { type = NavType.StringType },
                 navArgument("className") { type = NavType.StringType },
                 navArgument("subjectId") { type = NavType.StringType },
                 navArgument("startTime") { type = NavType.StringType },
-                navArgument("facultyId") { type = NavType.StringType }
+                navArgument("facultyId") { type = NavType.StringType },
+                navArgument("semesterId") { type = NavType.StringType }
             )
         ) {
             MarkAttendanceScreen(navController)

@@ -1,5 +1,6 @@
 package com.buildingbadd.demojc.uiscreen.faculty
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ fun MarkAttendanceScreen(
     val startTime =
         navController.currentBackStackEntry?.arguments?.getString("startTime") ?: return
     val facultyId = navController.currentBackStackEntry?.arguments?.getString("facultyId") ?: return
+    val semId = navController.currentBackStackEntry?.arguments?.getString("semesterId") ?: return
 
     val today = LocalDate.now().toString()
 
@@ -170,7 +172,8 @@ fun MarkAttendanceScreen(
                                 facultyId = facultyId,
                                 date = today,
                                 startTime = startTime,
-                                records = attendanceMap
+                                records = attendanceMap,
+                                semesterId = semId
                             )
                             navController.popBackStack()
                         },
@@ -198,9 +201,11 @@ fun saveAttendance(
     facultyId: String,
     date: String,
     startTime: String,
-    records: Map<String, Boolean>
+    records: Map<String, Boolean>,
+    semesterId: String
 ) {
     val docId = "${className}_${subjectId}_${date}_$startTime"
+    val TAG = "sem ID: "
 
     val data = hashMapOf(
         "timetableId" to timetableId,
@@ -209,13 +214,18 @@ fun saveAttendance(
         "facultyId" to facultyId,
         "date" to date,
         "startTime" to startTime,
-        "records" to records
+        "records" to records,
+        "semesterId" to semesterId
     )
+
+    Log.d(TAG,semesterId)
 
     db.collection("attendance")
         .document(docId)
         .set(data)
 }
+
+
 
 data class StudentItem(
     val enrollmentId: String,

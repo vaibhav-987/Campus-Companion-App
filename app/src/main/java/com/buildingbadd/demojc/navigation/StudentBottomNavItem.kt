@@ -17,11 +17,11 @@ sealed class StudentBottomNavItem(
         icon = Icons.Default.Home
     )
 
-    object Attendance : StudentBottomNavItem(
-        route = "student_attendance",
-        title = "Attendance",
-        icon = Icons.Default.Assessment
-    )
+//    object Attendance : StudentBottomNavItem(
+//        route = "student_attendance",
+//        title = "Attendance",
+//        icon = Icons.Default.Assessment
+//    )
 
     object Profile : StudentBottomNavItem(
         route = Routes.STUDENT_PROFILE,

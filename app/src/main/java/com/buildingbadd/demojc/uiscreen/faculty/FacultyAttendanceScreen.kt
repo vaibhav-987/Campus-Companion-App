@@ -41,6 +41,8 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
     var facultyId by remember { mutableStateOf("") }
+    var semesterId by remember { mutableStateOf("") }
+//    var semId by remember { mutableStateOf("") }
 
     var lectures by remember { mutableStateOf<List<LectureUI>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -61,9 +63,11 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
 
             val result = mutableListOf<LectureUI>()
 
+
+
             for (doc in snapshot.documents) {
 
-                val semesterId = doc.getString("semesterId") ?: continue
+                semesterId = doc.getString("semesterId") ?: continue
                 if (!activeSemesterIds.contains(semesterId)) continue
 
                 val className = doc.getString("class") ?: continue
@@ -71,6 +75,7 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
                     doc.get("slots") as? Map<String, List<Map<String, Any>>> ?: continue
 
                 val todaySlots = slots[today] ?: continue
+
 
                 todaySlots.forEach { slot ->
                     if (slot["facultyId"] == facultyId) {
@@ -81,15 +86,16 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
                                 className = className,
                                 startTime = slot["startTime"].toString(),
                                 endTime = slot["endTime"].toString(),
-                                room = slot["room"].toString()
+                                room = slot["room"].toString(),
+                                semId = doc.getString("semesterId") ?: ""
                             )
                         )
                     }
                 }
             }
 
-            // ✅ THIS WAS MISSING
             lectures = result.sortedBy { it.startTime }
+
 
         } catch (e: Exception) {
             Log.e("FacultyAttendance", "Error: ${e.message}", e)
@@ -120,8 +126,7 @@ fun FacultyAttendanceScreen(navController: NavHostController) {
                 else -> LazyColumn {
                     items(lectures) { lecture ->
                         LectureCard(lecture) {
-                            // Suggested: Include subjectId to make the Attendance record unique
-                            navController.navigate("mark_attendance/${lecture.timetableId}/${lecture.className}/${lecture.subjectId}/${lecture.startTime}/$facultyId")
+                            navController.navigate("mark_attendance/${lecture.timetableId}/${lecture.className}/${lecture.subjectId}/${lecture.startTime}/$facultyId/${lecture.semId}")
                         }
                     }
                 }
@@ -136,7 +141,8 @@ data class LectureUI(
     val className: String,
     val startTime: String,
     val endTime: String,
-    val room: String
+    val room: String,
+    val semId: String
 )
 
 @Composable

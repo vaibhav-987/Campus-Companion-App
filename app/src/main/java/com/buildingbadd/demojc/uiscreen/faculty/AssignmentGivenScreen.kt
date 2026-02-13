@@ -81,7 +81,7 @@ fun AssignmentGivenScreen(navController: NavHostController) {
     }
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Assignments Given") })
+            TopAppBar(title = { Text("Check Assignments") })
         }
     ) { padding ->
 
