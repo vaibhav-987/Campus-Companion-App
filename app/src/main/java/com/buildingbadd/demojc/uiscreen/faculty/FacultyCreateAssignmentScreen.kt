@@ -1,19 +1,51 @@
 package com.buildingbadd.demojc.uiscreen.faculty
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -42,10 +74,46 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
     var subjectDropdownExpanded by remember { mutableStateOf(false) }
 
     var facultyId by remember { mutableStateOf("") }
-//    var facultyClass by remember { mutableStateOf("") }
+
 
     var showDatePicker by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+
+    var titleError by remember { mutableStateOf<String?>(null) }
+    var subjectError by remember { mutableStateOf<String?>(null) }
+    var dueDateError by remember { mutableStateOf<String?>(null) }
+    var totalMarksError by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+
+    fun validateForm(): Boolean {
+        var isValid = true
+
+        if (selectedSubject == null) {
+            subjectError = "Please select a subject"
+            isValid = false
+        } else subjectError = null
+
+        if (title.isBlank()) {
+            titleError = "Title is required"
+            isValid = false
+        } else titleError = null
+
+        if (dueDate.isBlank()) {
+            dueDateError = "Set a deadline"
+            isValid = false
+        } else dueDateError = null
+
+        if (totalMarks.isBlank()) {
+            totalMarksError = "Enter marks"
+            isValid = false
+        } else if (totalMarks.toIntOrNull() == null) {
+            totalMarksError = "Invalid number"
+            isValid = false
+        } else totalMarksError = null
+
+        return isValid
+    }
 
     // ---------------- LOAD FACULTY SUBJECTS ----------------
     LaunchedEffect(Unit) {
@@ -57,7 +125,6 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
         val facultyDoc =
             db.collection("faculty_details").document(facultyId).get().await()
 
-//        facultyClass = facultyDoc.getString("class") ?: ""
 
         val assignedSubjectIds =
             facultyDoc.get("assignedSubjectIds") as? List<String> ?: emptyList()
@@ -109,15 +176,21 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
         }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Create Assignment") }) },
-        bottomBar = { FacultyBottomNavBar(navController) }
+        topBar = {
+            CampusAppBar(title = "Assignment Details",
+                onBackClick = { navController.popBackStack() }
+            )
+
+        }
     ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -131,6 +204,9 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Select Subject") },
+                    isError = subjectError != null,
+                    supportingText = { subjectError?.let { Text(it) } },
+
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(subjectDropdownExpanded)
                     },
@@ -147,6 +223,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                             onClick = {
                                 selectedSubject = subject
                                 subjectDropdownExpanded = false
+                                subjectError = null
                             }
                         )
                     }
@@ -155,8 +232,10 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
 
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { title = it; titleError=null },
                 label = { Text("Assignment Title") },
+                isError = titleError != null,
+                supportingText = { titleError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -181,6 +260,8 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Due Date") },
+                isError = dueDateError != null,
+                supportingText = { dueDateError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
@@ -191,15 +272,17 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
 
             OutlinedTextField(
                 value = totalMarks,
-                onValueChange = { totalMarks = it },
+                onValueChange = { totalMarks = it; totalMarksError=null },
                 label = { Text("Total Marks") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = totalMarksError != null,
+                supportingText = { totalMarksError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Button(
                 onClick = {
-                    if (selectedSubject == null || title.isBlank() || dueDate.isBlank()) return@Button
+                    if (!validateForm()) return@Button
                     isLoading = true
 
                     val subject = selectedSubject!!
@@ -222,6 +305,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
 
                     val uploadAndSave: (String?, String?) -> Unit = { name, url ->
                         saveAssignment(
+                            context = context,
                             db = db,
                             title = title,
                             description = description,
@@ -268,6 +352,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
                             .toString()
+                        dueDateError = null
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -277,6 +362,8 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
             }
         ) { DatePicker(state = state) }
     }
+
+
 }
 
 // ---------------- HELPERS ----------------
@@ -289,6 +376,7 @@ fun isOddSemester(): Boolean {
 
 // ---------- FIRESTORE SAVE ----------
 fun saveAssignment(
+    context: Context,
     db: FirebaseFirestore,
     title: String,
     description: String,
@@ -305,7 +393,7 @@ fun saveAssignment(
     navController: NavHostController,
     onComplete: () -> Unit
 ) {
-
+//    val context = LocalContext.current
     val data = hashMapOf(
         "title" to title,
         "description" to description,
@@ -331,11 +419,15 @@ fun saveAssignment(
         .add(data)
         .addOnSuccessListener {
             onComplete()
+            Toast.makeText(context, "Assignment Published Successfully!", Toast.LENGTH_SHORT).show()
             navController.popBackStack()
         }
         .addOnFailureListener {
             onComplete()
+
         }
+
+
 }
 
-// ---------- UI MODEL ----------
+

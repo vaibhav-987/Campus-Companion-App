@@ -1,7 +1,6 @@
 package com.buildingbadd.demojc.uiscreen.auth
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,13 +22,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.buildingbadd.demojc.R
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -46,12 +42,7 @@ fun LoginScreen(navController: NavHostController) {
 
         contentAlignment = Alignment.Center
     ) {
-//        Image(
-//            painter = painterResource(id = R.drawable.signin_screen), // <-- Replace with your image name
-//            contentDescription = "Background Image",
-//            modifier = Modifier.fillMaxSize(),
-//            contentScale = ContentScale.FillBounds // This will crop the image to fill the screen
-//        )
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("Login", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(24.dp))
@@ -99,7 +90,6 @@ fun LoginScreen(navController: NavHostController) {
                 )
 
             )
-//            Spacer(modifier = Modifier.height(.dp))
 
             val context = LocalContext.current
 
@@ -147,7 +137,7 @@ fun LoginScreen(navController: NavHostController) {
                                             popUpTo("welcome") { inclusive = true }
                                         }
                                     } else if (role == "admin") {
-                                        navController.navigate("admin_approval") {
+                                        navController.navigate("admin_home") {
                                             popUpTo("welcome") { inclusive = true }
                                         }
                                     }
@@ -186,7 +176,3 @@ fun LoginScreen(navController: NavHostController) {
         }
     }
 }
-
-
-
-

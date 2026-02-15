@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -28,18 +29,18 @@ fun StudentSubjectsScreen(navController: NavHostController) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-            // 🔹 Get enrollmentId
+            // Get enrollmentId
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-            // 🔹 Get student details
+            // Get student details
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
 
             val currentSemesterId =
                 studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
 
-            // 🔹 Fetch subjects for current semester
+            // Fetch subjects for current semester
             val snapshot = db.collection("subjects")
                 .whereEqualTo("semesterId", currentSemesterId)
                 .get()
@@ -57,7 +58,10 @@ fun StudentSubjectsScreen(navController: NavHostController) {
     }
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Subjects") })
+            CampusAppBar(title = "Subjects",
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 

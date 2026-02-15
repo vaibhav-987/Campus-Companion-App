@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -22,7 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.buildingbadd.demojc.R
-import com.buildingbadd.demojc.updateFacultySubjects
 
 
 @Composable
@@ -30,7 +30,7 @@ fun WelcomeScreen(navController: NavHostController) {
     val context = LocalContext.current
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().navigationBarsPadding()
     ) {
 
         Column(
@@ -86,26 +86,6 @@ fun WelcomeScreen(navController: NavHostController) {
             }
 
             Spacer(Modifier.height(32.dp))
-
-
-//// ...
-//
-//            Button(onClick = {
-//                updateFacultySubjects(context) { success ->
-//                    if (success) {
-//                        // Handle success (e.g., show a Toast)
-//                    } else {
-//                        // Handle failure
-//                    }
-//                }
-//            }) {
-//                Text("Initialize Subject Data (Admin)")
-//            }
-//
-//// ...
-
-
-
 
             Spacer(modifier = Modifier.weight(1f))
         }

@@ -24,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -47,7 +47,7 @@ import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AssignmentDetailScreen(navController: NavHostController) {
+fun StudentAssignmentDetailScreen(navController: NavHostController) {
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -61,7 +61,7 @@ fun AssignmentDetailScreen(navController: NavHostController) {
             ?.arguments
             ?.getString("assignmentId")
 
-    // ✅ Get assignmentId from route
+    // Get assignmentId from route
     if (assignmentId == null) {
         Text("Invalid assignment")
         Toast.makeText(context, "Invalid assignmentId", Toast.LENGTH_SHORT).show()
@@ -75,7 +75,7 @@ fun AssignmentDetailScreen(navController: NavHostController) {
     var isLoading by remember { mutableStateOf(true) }
 
 
-    // 🔹 Fetch assignment from Firestore
+    // Fetch assignment from Firestore
     LaunchedEffect(assignmentId) {
 
             val auth = FirebaseAuth.getInstance()
@@ -117,7 +117,7 @@ fun AssignmentDetailScreen(navController: NavHostController) {
         isSubmissionLoading = false
     }
 
-    // 🔹 File submission state
+    // File submission state
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var selectedFileName by remember { mutableStateOf("") }
     var isSubmitting by remember { mutableStateOf(false) }
@@ -135,7 +135,10 @@ fun AssignmentDetailScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Assignment Details") })
+            CampusAppBar(title = "Assignment Details",
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 
@@ -212,7 +215,7 @@ fun AssignmentDetailScreen(navController: NavHostController) {
                     }
 
 
-                    // ✅ DOWNLOAD (WORKING)
+                    // DOWNLOAD (WORKING)
                     if (assignment!!.attachmentUrl != null) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(

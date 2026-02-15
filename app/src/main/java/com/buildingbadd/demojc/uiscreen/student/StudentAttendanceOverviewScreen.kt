@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -32,12 +33,12 @@ fun StudentAttendanceOverviewScreen(
 
     LaunchedEffect(Unit) {
         try {
-            // 1️⃣ Get enrollmentId
+            // Get enrollmentId
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-            // 2️⃣ Get student details
+            // Get student details
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
 
@@ -45,7 +46,7 @@ fun StudentAttendanceOverviewScreen(
             val semesterId =
                 studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
 
-            // 3️⃣ Get subjects of current semester
+            // Get subjects of current semester
             val subjectSnapshot =
                 db.collection("subjects")
                     .whereEqualTo("semesterId", semesterId)
@@ -59,7 +60,7 @@ fun StudentAttendanceOverviewScreen(
                 val subjectId = subjectDoc.id ?: continue
                 val subjectName = subjectDoc.getString("name") ?: continue
 
-                // 4️⃣ Fetch attendance for subject
+                // Fetch attendance for subject
                 val attendanceSnapshot =
                     db.collection("attendance")
                         .whereEqualTo("class", studentClass)
@@ -104,7 +105,10 @@ fun StudentAttendanceOverviewScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Attendance Overview") })
+            CampusAppBar(title = "Attendance Overview",
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 

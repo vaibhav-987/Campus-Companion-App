@@ -46,18 +46,18 @@ fun StudentAttendanceScreen(navController: NavHostController) {
             val uid = auth.currentUser?.uid
                 ?: throw Exception("User not logged in")
 
-            // 1️⃣ Get enrollmentId
+            // Get enrollmentId
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId")
                 ?: throw Exception("Enrollment ID missing")
 
-            // 2️⃣ Get class
+            // Get class
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
             val studentClass = studentDoc.getString("class")
                 ?: throw Exception("Class missing")
 
-            // 3️⃣ Query attendance
+            // Query attendance
             val snapshot = db.collection("attendance")
                 .whereEqualTo("class", studentClass)
                 .get()

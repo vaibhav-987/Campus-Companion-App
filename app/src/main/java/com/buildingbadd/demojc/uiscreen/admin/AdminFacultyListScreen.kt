@@ -65,15 +65,6 @@ fun AdminFacultyListScreen(navController: NavHostController) {
         bottomBar = {
             AdminBottomNavBar(navController)
         }
-//        floatingActionButton = {
-//            FloatingActionButton(
-//                onClick = {
-//                    navController.navigate("admin_add_faculty")
-//                }
-//            ) {
-//                Icon(Icons.Default.Add, contentDescription = "Add Faculty")
-//            }
-//        }
     ) { padding ->
 
         Box(

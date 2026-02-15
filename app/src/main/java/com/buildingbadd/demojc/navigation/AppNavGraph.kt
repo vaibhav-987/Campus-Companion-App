@@ -16,7 +16,6 @@ import com.buildingbadd.demojc.uiscreen.admin.AdminStudentDetailsScreen
 import com.buildingbadd.demojc.uiscreen.admin.AdminStudentListScreen
 import com.buildingbadd.demojc.uiscreen.admin.AdminYearSelectionScreen
 import com.buildingbadd.demojc.uiscreen.auth.LoginScreen
-import com.buildingbadd.demojc.uiscreen.auth.PendingApprovalScreen
 import com.buildingbadd.demojc.uiscreen.auth.SignupScreen
 import com.buildingbadd.demojc.uiscreen.faculty.AssignmentGivenScreen
 import com.buildingbadd.demojc.uiscreen.faculty.AssignmentSubmissionsScreen
@@ -32,7 +31,7 @@ import com.buildingbadd.demojc.uiscreen.faculty.FacultyNotesHistoryScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyProfileScreen
 import com.buildingbadd.demojc.uiscreen.faculty.FacultyUploadNotesScreen
 import com.buildingbadd.demojc.uiscreen.faculty.MarkAttendanceScreen
-import com.buildingbadd.demojc.uiscreen.student.AssignmentDetailScreen
+import com.buildingbadd.demojc.uiscreen.student.StudentAssignmentDetailScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAssignmentsScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceHistoryScreen
 import com.buildingbadd.demojc.uiscreen.student.StudentAttendanceOverviewScreen
@@ -67,10 +66,6 @@ fun AppNavGraph(
 
         composable(Routes.SIGNUP) {
             SignupScreen(navController)
-        }
-
-        composable(Routes.PENDING) {
-            PendingApprovalScreen()
         }
 
         /* ---------------- ADMIN ---------------- */
@@ -147,6 +142,7 @@ fun AppNavGraph(
         }
 
 
+
         /* ---------------- STUDENT ---------------- */
 
         composable(Routes.STUDENT_HOME) {
@@ -196,7 +192,7 @@ fun AppNavGraph(
                 navArgument("assignmentId") { type = NavType.StringType }
             )
         ) {
-            AssignmentDetailScreen(navController)
+            StudentAssignmentDetailScreen(navController)
         }
 
         composable("student_subjects") {
@@ -212,6 +208,8 @@ fun AppNavGraph(
                 subjectId = it.arguments?.getString("subjectId")!!
             )
         }
+
+
 
         /* ---------------- FACULTY ---------------- */
 

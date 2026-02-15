@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.firebase.firestore.FirebaseFirestore
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,7 +45,12 @@ fun AssignmentSubmissionsScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Submissions") }) }
+        topBar = {
+            CampusAppBar(title = "Submissions",
+                onBackClick = { navController.popBackStack() }
+            )
+
+        }
     ) { padding ->
 
         Box(

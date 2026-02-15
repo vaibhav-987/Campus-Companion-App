@@ -1,26 +1,25 @@
 package com.buildingbadd.demojc.uiscreen.faculty
 
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,8 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.R
 import com.buildingbadd.demojc.navigation.Routes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -79,34 +80,21 @@ fun FacultyDashboard(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Hi, $facultyName",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = userRole.replaceFirstChar { it.uppercase() },
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            androidx.compose.material3.Surface(
+                shadowElevation = 4.dp,
+                tonalElevation = 2.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                TopAppBar(
+                    title = {
+                            Text(
+                                text = "Hi, $facultyName",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+
                     }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        auth.signOut()
-                        navController.navigate("welcome") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout"
-                        )
-                    }
-                }
-            )
+                )
+            }
         },
         bottomBar = {
             FacultyBottomNavBar(navController)
@@ -129,32 +117,30 @@ fun FacultyDashboard(navController: NavHostController) {
                     .padding(padding)
                     .padding(16.dp)
             ) {
-
-                Text(
-                    text = "Welcome, $facultyName",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 val dashboardItems = listOf(
                     FacultyDashboardItem(
                         title = "Take Attendance",
+                        iconRes = R.drawable.ic_take_attendance,
                         route = "faculty_attendance"
                     ),FacultyDashboardItem(
                         title = "Attendance Summary",
+                        iconRes = R.drawable.ic_attendance_summary,
                         route = "attendance_summary"
                     ),FacultyDashboardItem(
                         title = "Create Assignment",
+                        iconRes = R.drawable.ic_create_assignment,
                         route = "faculty_create_assignment"
                     ),FacultyDashboardItem(
                         title = "Upload Notes",
+                        iconRes = R.drawable.ic_upload_notes,
                         route = "faculty_upload_notes"
                     ),FacultyDashboardItem(
                         title = "Check Assignments",
+                        iconRes = R.drawable.ic_check_assignment,
                         route = Routes.FACULTY_ASSIGNMENTS_GIVEN
                     ),FacultyDashboardItem(
                         title = "My Assignments",
+                        iconRes = R.drawable.ic_my_assignments,
                         route = Routes.FACULTY_ASSIGNMENTS
                     )
 
@@ -162,8 +148,10 @@ fun FacultyDashboard(navController: NavHostController) {
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(top = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(dashboardItems) { item ->
                         FacultyDashboardCard(item) {
@@ -178,6 +166,7 @@ fun FacultyDashboard(navController: NavHostController) {
 
 data class FacultyDashboardItem(
     val title: String,
+    val iconRes: Int,
     val route: String
 )
 
@@ -191,18 +180,32 @@ fun FacultyDashboardCard(
             .aspectRatio(1f)
             .fillMaxWidth(),
         onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface // Clean look for light mode
+        )
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            // 1. Display the SVG Icon
+            Image(
+                painter = painterResource(id = item.iconRes),
+                contentDescription = item.title,
+                modifier = Modifier.size(64.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Display the Title
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
         }
     }
 }
-
-

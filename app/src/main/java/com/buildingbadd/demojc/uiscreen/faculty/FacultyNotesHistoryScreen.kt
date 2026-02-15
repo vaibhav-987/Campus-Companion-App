@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -71,11 +71,13 @@ fun FacultyNotesHistoryScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Notes History") }
+            CampusAppBar(title = "Notes History",
+                onBackClick = { navController.popBackStack() }
             )
+
         }
-    ) { padding ->
+    )
+     { padding ->
 
         Box(
             modifier = Modifier

@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,7 +50,12 @@ fun AdminProfileScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Admin Profile") }
+                title = { Text("Admin Profile") },
+                actions = {
+                    TextButton(onClick = { showLogoutDialog = true }) {
+                        Text("Logout")
+                    }
+                }
             )
         },
         bottomBar = {
@@ -111,7 +119,6 @@ fun AdminProfileContent(
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
 
         // Avatar
@@ -151,7 +158,7 @@ fun AdminProfileContent(
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Text(
-                text = "System Administrator",
+                text = "App Administrator",
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 color = MaterialTheme.colorScheme.primary
             )
@@ -169,9 +176,26 @@ fun AdminProfileContent(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Text(
+                    text = "Administrative Details",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
 
-                InfoRow("Admin ID", profile.adminId)
-                InfoRow("Access Level", "Full System Control")
+                InfoRow(
+                    icon = Icons.Default.Badge,
+                    label = "Admin ID",
+                    value = profile.adminId.take(8).uppercase()
+                )
+
+                HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
+
+                InfoRow(
+                    icon = Icons.Default.Security,
+                    label = "Access Level",
+                    value = "Full System Control"
+                )
             }
         }
 

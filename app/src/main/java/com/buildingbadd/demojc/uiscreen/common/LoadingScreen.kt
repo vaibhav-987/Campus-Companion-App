@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoadingScreen() {
-    // Box centers the content on the screen
+
     Box(
         modifier = Modifier
             .fillMaxSize(),
@@ -20,8 +20,7 @@ fun LoadingScreen() {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            //new feature
-            // Standard Material 3 Loading Spinner
+
             CircularProgressIndicator(
                 modifier = Modifier.width(64.dp),
                 color = MaterialTheme.colorScheme.primary,

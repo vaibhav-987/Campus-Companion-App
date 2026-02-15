@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -25,7 +26,6 @@ fun StudentAttendanceHistoryScreen(
     navController: NavHostController,
     subjectId: String
 ) {
-
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
@@ -79,10 +79,10 @@ fun StudentAttendanceHistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(subjectName.ifEmpty { "Attendance History" }) })
-        },
-        bottomBar = {
-            StudentBottomNavBar(navController)
+            CampusAppBar(title =  "Attendance History" ,
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 

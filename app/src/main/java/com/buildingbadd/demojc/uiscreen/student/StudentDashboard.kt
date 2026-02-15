@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,18 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +48,8 @@ import kotlinx.coroutines.tasks.await
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun StudentDashboard(navController: NavHostController) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
@@ -135,32 +132,29 @@ fun StudentDashboard(navController: NavHostController) {
     )
 
     Scaffold(
+//        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Hi, $userName",
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                    }
-                }
-                ,
-                actions = {
-                    IconButton(onClick = {
-                        FirebaseAuth.getInstance().signOut()
-
-                        navController.navigate("welcome") {
-                            popUpTo(0) { inclusive = true }
+            androidx.compose.material3.Surface(
+                shadowElevation = 4.dp,
+                tonalElevation = 2.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "Hi, $userName",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Logout,
-                            contentDescription = "Logout"
-                        )
-                    }
-                }
-            )
+                    },
+
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            }
         },
         bottomBar = {
             StudentBottomNavBar(navController)

@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -29,21 +30,21 @@ fun StudentTodayLecturesScreen(navController: NavHostController) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-            // 1️⃣ Get enrollmentId
+            // Get enrollmentId
             val userDoc = db.collection("users").document(uid).get().await()
             val enrollmentId = userDoc.getString("enrollmentId") ?: return@LaunchedEffect
 
-            // 2️⃣ Get student semester
+            // Get student semester
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
 
             val semesterId = studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
 
-            // 3️⃣ Get today
+            // Get today
             val today = LocalDate.now().dayOfWeek.name
             todayName = today.lowercase().replaceFirstChar { it.uppercase() }
 
-            // 4️⃣ Get timetable
+            // Get timetable
             val timetableDoc =
                 db.collection("timetables").document(semesterId).get().await()
 
@@ -57,12 +58,12 @@ fun StudentTodayLecturesScreen(navController: NavHostController) {
                 val subjectId = slot["subjectId"] as String
                 val facultyId = slot["facultyId"] as String
 
-                // 🔹 Fetch subject name
+                // Fetch subject name
                 val subjectDoc =
                     db.collection("subjects").document(subjectId).get().await()
                 val subjectName = subjectDoc.getString("name") ?: subjectId
 
-                // 🔹 Fetch faculty name
+                // Fetch faculty name
                 val facultyDoc =
                     db.collection("faculty_details").document(facultyId).get().await()
                 val facultyName = facultyDoc.getString("name") ?: facultyId
@@ -88,9 +89,11 @@ fun StudentTodayLecturesScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Today's Lectures") })
-        },
-        bottomBar = { StudentBottomNavBar(navController) }
+            CampusAppBar(title = "Schedule",
+                onBackClick = { navController.popBackStack() }
+            )
+
+        }
     ) { padding ->
 
         Box(
@@ -136,33 +139,59 @@ fun LectureCard(lecture: TodayLecture) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        elevation = CardDefaults.cardElevation(6.dp)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically // Keeps everything aligned in the middle
+        ) {
+            // --- LEFT SIDE: LECTURE DETAILS ---
+            Column(
+                modifier = Modifier.weight(1f) // This pushes the room info to the right
+            ) {
+                Text(
+                    text = "${lecture.startTime} - ${lecture.endTime}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary // Adds a nice pop of color to the time
+                )
 
-            Text(
-                text = "${lecture.startTime} - ${lecture.endTime}",
-                style = MaterialTheme.typography.titleMedium
-            )
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = lecture.subjectName,
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-            Text(
-                text = lecture.subjectName,
-                style = MaterialTheme.typography.titleSmall
-            )
+                Text(
+                    text = "Faculty: ${lecture.facultyName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-            Text(
-                text = "Faculty: ${lecture.facultyName}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text =  lecture.room,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // --- RIGHT SIDE: ROOM BADGE ---
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer, // Light blue/grey background
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.padding(start = 12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = lecture.room,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
         }
     }
 }

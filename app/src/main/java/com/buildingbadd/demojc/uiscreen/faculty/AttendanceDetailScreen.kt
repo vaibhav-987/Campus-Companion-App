@@ -16,7 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.buildingbadd.demojc.uiscreen.faculty.components.StudentAttendanceRow
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -79,9 +79,10 @@ fun AttendanceDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Attendance Details") }
+            CampusAppBar(title = "Attendance Details",
+                onBackClick = { navController.popBackStack() }
             )
+
         }
     ) { padding ->
 

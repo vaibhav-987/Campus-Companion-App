@@ -33,7 +33,7 @@ fun AdminStudentDetailsScreen(
 
     LaunchedEffect(Unit) {
 
-        // 🔍 Check if registered
+        // Check if registered
         val detailDoc = db.collection("students_detail")
             .document(enrollmentId)
             .get()

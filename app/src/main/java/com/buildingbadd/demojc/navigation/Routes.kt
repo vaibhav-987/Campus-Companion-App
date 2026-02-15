@@ -6,7 +6,6 @@ object Routes {
     const val WELCOME = "welcome"
     const val LOGIN = "login"
     const val SIGNUP = "signup"
-    const val PENDING = "pending"
 
     // Student
     const val STUDENT_HOME = "student_home"

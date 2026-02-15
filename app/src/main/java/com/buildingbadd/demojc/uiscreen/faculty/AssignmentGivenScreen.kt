@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.buildingbadd.demojc.navigation.Routes
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.buildingbadd.demojc.uiscreen.student.Assignment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -81,7 +82,10 @@ fun AssignmentGivenScreen(navController: NavHostController) {
     }
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Check Assignments") })
+            CampusAppBar(title = "Check Assignment",
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 

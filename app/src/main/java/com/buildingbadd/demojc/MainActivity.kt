@@ -3,6 +3,7 @@ package com.buildingbadd.demojc
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,13 +20,12 @@ import com.google.firebase.initialize
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Firebase.initialize(context = this)
-        
 
         setContent {
             DemoJCTheme {
-                // ... inside setContent
                 val navController = rememberNavController()
                 var startDestination by remember { mutableStateOf<String?>(null) }
 

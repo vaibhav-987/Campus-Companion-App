@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="CampusCompanion.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-02-07T05:36:16.052785700Z">
+        <DropdownSelection timestamp="2026-02-15T09:34:25.911145100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZD2229SF8C" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Urmi\.android\avd\Pixel_7.avd" />
             </handle>
           </Target>
         </DropdownSelection>

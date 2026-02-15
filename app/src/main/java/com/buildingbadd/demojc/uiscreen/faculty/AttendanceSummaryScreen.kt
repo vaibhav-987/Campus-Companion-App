@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -44,7 +45,7 @@ fun AttendanceSummaryScreen(
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
 
-            // 🔹 get facultyId
+            // get facultyId
             val userDoc = db.collection("users").document(uid).get().await()
             val facultyId = userDoc.getString("facultyId") ?: return@LaunchedEffect
 
@@ -86,7 +87,10 @@ fun AttendanceSummaryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Attendance Summary") })
+            CampusAppBar(title = "Attendance Summary",
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 

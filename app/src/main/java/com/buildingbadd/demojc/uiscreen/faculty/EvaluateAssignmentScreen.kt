@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.firebase.firestore.FirebaseFirestore
+import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -52,7 +53,10 @@ fun EvaluateAssignmentScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Evaluate Assignment") })
+            CampusAppBar(title = "Evaluate Assignment",
+                onBackClick = { navController.popBackStack() }
+            )
+
         }
     ) { padding ->
 

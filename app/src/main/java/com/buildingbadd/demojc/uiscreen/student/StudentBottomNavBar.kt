@@ -12,7 +12,6 @@ fun StudentBottomNavBar(navController: NavController) {
 
     val items = listOf(
         StudentBottomNavItem.Dashboard,
-//        StudentBottomNavItem.Attendance,
         StudentBottomNavItem.Profile
     )
 
