@@ -54,7 +54,7 @@ fun LoginScreen(navController: NavHostController) {
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp, 45.dp, 10.dp, 0.dp),
+                    .padding(15.dp, 45.dp, 15.dp, 0.dp),
                 colors = TextFieldDefaults.colors(
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.DarkGray,
@@ -77,7 +77,7 @@ fun LoginScreen(navController: NavHostController) {
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp, 5.dp, 10.dp, 20.dp),
+                    .padding(15.dp, 5.dp, 15.dp, 20.dp),
                 colors = TextFieldDefaults.colors(
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.DarkGray,
@@ -156,7 +156,7 @@ fun LoginScreen(navController: NavHostController) {
                         }
                     }
 
-            }, modifier = Modifier.fillMaxWidth()) {
+            }) {
                 Text("Login")
             }
 

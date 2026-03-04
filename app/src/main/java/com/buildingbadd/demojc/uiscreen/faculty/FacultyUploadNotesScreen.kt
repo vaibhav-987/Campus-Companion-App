@@ -296,8 +296,8 @@ enum class SemesterType { ODD, EVEN }
 fun currentSemesterType(): SemesterType {
     val month = LocalDate.now().monthValue
     return when (month) {
-        in 7..12 -> SemesterType.ODD
-        in 1..5 -> SemesterType.EVEN
+        in 6..10 -> SemesterType.ODD
+        in 1..5, in 11..12 -> SemesterType.EVEN
         else -> throw IllegalStateException("Academic transition month")
     }
 }

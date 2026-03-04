@@ -1,6 +1,7 @@
 package com.buildingbadd.demojc.uiscreen.faculty
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.buildingbadd.demojc.uiscreen.common.CampusAppBar
@@ -59,8 +61,10 @@ fun MarkAttendanceScreen(
     val attendanceMap = remember { mutableStateMapOf<String, Boolean>() }
     var isLoading by remember { mutableStateOf(true) }
     var attendanceAlreadyMarked by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+
 
         // Load students
         val snapshot = db.collection("students_detail")
@@ -176,6 +180,11 @@ fun MarkAttendanceScreen(
                                 records = attendanceMap,
                                 semesterId = semId
                             )
+                            Toast.makeText(
+                                context,
+                                "Attendance marked successfully!",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             navController.popBackStack()
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -206,7 +215,7 @@ fun saveAttendance(
     semesterId: String
 ) {
     val docId = "${className}_${subjectId}_${date}_$startTime"
-    val TAG = "sem ID: "
+
 
     val data = hashMapOf(
         "timetableId" to timetableId,
@@ -218,8 +227,6 @@ fun saveAttendance(
         "records" to records,
         "semesterId" to semesterId
     )
-
-    Log.d(TAG,semesterId)
 
     db.collection("attendance")
         .document(docId)

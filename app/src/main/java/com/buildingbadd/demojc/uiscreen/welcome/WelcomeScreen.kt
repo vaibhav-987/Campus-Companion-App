@@ -27,7 +27,6 @@ import com.buildingbadd.demojc.R
 
 @Composable
 fun WelcomeScreen(navController: NavHostController) {
-    val context = LocalContext.current
 
     Box(
         modifier = Modifier.fillMaxSize().navigationBarsPadding()
@@ -40,13 +39,13 @@ fun WelcomeScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
 
             Image(
                 painter = painterResource(id = R.drawable.college),
                 contentDescription = "College Logo",
-                modifier = Modifier.size(90.dp)
+                modifier = Modifier.size(100.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -198,7 +198,10 @@ fun DashboardGridItem(item: DashboardItem) {
         modifier = Modifier
             .aspectRatio(1f)
             .clickable { item.onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface // Clean look for light mode
+        )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -211,7 +214,7 @@ fun DashboardGridItem(item: DashboardItem) {
                 Image(
                     painter = painterResource(id = item.iconRes),
                     contentDescription = item.title,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(64.dp)
                 )
             }
 
@@ -223,8 +226,7 @@ fun DashboardGridItem(item: DashboardItem) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = item.title.uppercase(),
-                    color = Color.White,
+                    text = item.title,
                     style = MaterialTheme.typography.labelLarge
                 )
             }

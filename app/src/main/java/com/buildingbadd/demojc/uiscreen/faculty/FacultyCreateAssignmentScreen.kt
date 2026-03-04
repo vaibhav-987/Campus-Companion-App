@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -177,16 +179,90 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            CampusAppBar(title = "Assignment Details",
+            CampusAppBar(
+                title = "Create Assignment",
                 onBackClick = { navController.popBackStack() }
             )
+        },
+        bottomBar = {
+            Surface(
+                tonalElevation = 3.dp, // Optional: gives a slight shadow/separation
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        if (!validateForm()) return@Button
+                        isLoading = true
 
+                        val subject = selectedSubject!!
+                        val subjectId = subject.subjectId
+                        val subjectName = subject.subjectName
+                        val semesterId = subject.semesterId
+
+                        val courseId = if (semesterId.startsWith("BSCIT")) "BSCIT" else "BCOM"
+
+                        val className = when {
+                            semesterId.endsWith("1") || semesterId.endsWith("2") ->
+                                if (courseId == "BSCIT") "FYBSCIT" else "FYBCOM"
+
+                            semesterId.endsWith("3") || semesterId.endsWith("4") ->
+                                if (courseId == "BSCIT") "SYBSCIT" else "SYBCOM"
+
+                            else ->
+                                if (courseId == "BSCIT") "TYBSCIT" else "TYBCOM"
+                        }
+
+                        val uploadAndSave: (String?, String?) -> Unit = { name, url ->
+                            saveAssignment(
+                                context = context,
+                                db = db,
+                                title = title,
+                                description = description,
+                                subjectId = subjectId,
+                                subjectName = subjectName,
+                                facultyId = facultyId,
+                                courseId = courseId,
+                                semesterId = semesterId,
+                                className = className,
+                                dueDate = dueDate,
+                                totalMarks = totalMarks,
+                                attachmentName = name,
+                                attachmentUrl = url,
+                                navController = navController,
+                                onComplete = { isLoading = false }
+                            )
+                        }
+
+                        if (selectedFileUri != null) {
+                            val ref = FirebaseStorage.getInstance()
+                                .reference.child("assignments/$subjectId/$attachmentName")
+
+                            ref.putFile(selectedFileUri!!)
+                                .continueWithTask { ref.downloadUrl }
+                                .addOnSuccessListener {
+                                    uploadAndSave(
+                                        attachmentName,
+                                        it.toString()
+                                    )
+                                }
+                        } else uploadAndSave(null, null)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .navigationBarsPadding(),
+                    enabled = !isLoading
+                ) {
+                    Text(if (isLoading) "Publishing..." else "Publish Assignment")
+                }
+            }
         }
     ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(padding)
                 .padding(16.dp)
@@ -210,7 +286,9 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(subjectDropdownExpanded)
                     },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
                 )
 
                 ExposedDropdownMenu(
@@ -232,7 +310,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
 
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it; titleError=null },
+                onValueChange = { title = it; titleError = null },
                 label = { Text("Assignment Title") },
                 isError = titleError != null,
                 supportingText = { titleError?.let { Text(it) } },
@@ -251,8 +329,10 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 onClick = { filePickerLauncher.launch("*/*") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (attachmentName.isEmpty()) "Attach Assignment File"
-                else "Attached: $attachmentName")
+                Text(
+                    if (attachmentName.isEmpty()) "Attach Assignment File"
+                    else "Attached: $attachmentName"
+                )
             }
 
             OutlinedTextField(
@@ -272,7 +352,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
 
             OutlinedTextField(
                 value = totalMarks,
-                onValueChange = { totalMarks = it; totalMarksError=null },
+                onValueChange = { totalMarks = it; totalMarksError = null },
                 label = { Text("Total Marks") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = totalMarksError != null,
@@ -280,64 +360,7 @@ fun FacultyCreateAssignmentScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Button(
-                onClick = {
-                    if (!validateForm()) return@Button
-                    isLoading = true
 
-                    val subject = selectedSubject!!
-                    val subjectId = subject.subjectId
-                    val subjectName = subject.subjectName
-                    val semesterId = subject.semesterId
-
-                    val courseId = if (semesterId.startsWith("BSCIT")) "BSCIT" else "BCOM"
-
-                    val className = when {
-                        semesterId.endsWith("1") || semesterId.endsWith("2") ->
-                            if (courseId == "BSCIT") "FYBSCIT" else "FYBCOM"
-
-                        semesterId.endsWith("3") || semesterId.endsWith("4") ->
-                            if (courseId == "BSCIT") "SYBSCIT" else "SYBCOM"
-
-                        else ->
-                            if (courseId == "BSCIT") "TYBSCIT" else "TYBCOM"
-                    }
-
-                    val uploadAndSave: (String?, String?) -> Unit = { name, url ->
-                        saveAssignment(
-                            context = context,
-                            db = db,
-                            title = title,
-                            description = description,
-                            subjectId = subjectId,
-                            subjectName = subjectName,
-                            facultyId = facultyId,
-                            courseId = courseId,
-                            semesterId = semesterId,
-                            className = className,
-                            dueDate = dueDate,
-                            totalMarks = totalMarks,
-                            attachmentName = name,
-                            attachmentUrl = url,
-                            navController = navController,
-                            onComplete = { isLoading = false }
-                        )
-                    }
-
-                    if (selectedFileUri != null) {
-                        val ref = FirebaseStorage.getInstance()
-                            .reference.child("assignments/$subjectId/$attachmentName")
-
-                        ref.putFile(selectedFileUri!!)
-                            .continueWithTask { ref.downloadUrl }
-                            .addOnSuccessListener { uploadAndSave(attachmentName, it.toString()) }
-                    } else uploadAndSave(null, null)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
-            ) {
-                Text(if (isLoading) "Publishing..." else "Publish Assignment")
-            }
         }
     }
 
@@ -371,7 +394,6 @@ fun isOddSemester(): Boolean {
     val month = LocalDate.now().monthValue
     return month in 6..10
 }
-
 
 
 // ---------- FIRESTORE SAVE ----------

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -295,6 +296,8 @@ fun ContactDetailsCard(
 
             InfoRowSimple("Phone", profile.phone)
             InfoRowSimple("Email", profile.email)
+            Spacer(modifier = Modifier.height(8.dp))
+            InfoRowSimple("Address", profile.address)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -468,10 +471,11 @@ fun AddressRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text("Address", color = Color.Gray)
-            Text(address.ifEmpty { "-" })
-        }
+//        Row {
+//            Text("Address", color = Color.Gray)
+//            Spacer(modifier = Modifier.width(10.dp))
+//            Text(address.ifEmpty { "-" })
+//        }
 
         if (!addressLocked) {
             TextButton(onClick = onEditClick) {
