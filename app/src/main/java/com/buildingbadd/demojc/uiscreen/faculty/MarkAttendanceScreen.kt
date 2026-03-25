@@ -68,7 +68,7 @@ fun MarkAttendanceScreen(
 
         // Load students
         val snapshot = db.collection("students_detail")
-            .whereEqualTo("class", className)
+            .whereEqualTo("currentSemesterId", semId)
             .get()
             .await()
 

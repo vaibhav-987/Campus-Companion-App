@@ -43,6 +43,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import androidx.compose.ui.graphics.Color
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,6 +105,7 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
             subjectName = doc.getString("subjectName") ?: "",
             className = doc.getString("class") ?: "",
             dueDate = doc.getString("dueDate") ?: "",
+            semesterId = doc.getString("semesterId") ?: "",
             attachmentName = doc.getString("attachmentName"),
             attachmentUrl = doc.getString("attachmentUrl")
         )
@@ -178,6 +182,13 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
 
                     Divider()
 
+                    val isPastDueDate = try {
+                        val due = LocalDate.parse(assignment!!.dueDate)
+                        due.isBefore(LocalDate.now())
+                    } catch (e: Exception) {
+                        false
+                    }
+
                     when {
                         isSubmissionLoading -> {
                             CircularProgressIndicator()
@@ -185,16 +196,30 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
 
                         submission == null -> {
                             Text(
-                                text = "Not submitted yet",
+                                text = if (isPastDueDate) "Submission closed (Due date passed)" else "Not submitted yet",
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
 
                         submission!!["status"] == "submitted" -> {
-                            Text(
-                                text = "Submitted – Pending Evaluation",
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Column {
+                                Text(
+                                    text = "Submitted – Pending Evaluation",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = "You have already submitted this assignment.",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                if (submission!!["fileName"] != null) {
+                                    Text(
+                                        text = "File: ${submission!!["fileName"]}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
                         }
 
                         submission!!["status"] == "evaluated" -> {
@@ -204,7 +229,7 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
                             Text(
                                 text = "Marks: $marks",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
+                                color = Color(0xFF2E7D32) // Green for evaluated
                             )
 
                             if (!remarks.isNullOrBlank()) {
@@ -237,7 +262,7 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
 
 
 
-                    if (submission == null || submission!!["status"] != "evaluated") {
+                    if (submission == null && !isPastDueDate) {
 
 
                         Text("Submit Assignment", style = MaterialTheme.typography.titleMedium)
@@ -267,6 +292,7 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
                                         fileName = selectedFileName
                                     )
                                     isSubmitting = false
+                                    Toast.makeText(context, "Assignment Submitted Successfully", Toast.LENGTH_SHORT).show()
                                     navController.popBackStack()
                                 }
                             },
@@ -275,6 +301,14 @@ fun StudentAssignmentDetailScreen(navController: NavHostController) {
                         ) {
                             Text(if (isSubmitting) "Submitting..." else "Submit Assignment")
                         }
+                    } else if (isPastDueDate && submission == null) {
+                        Text(
+                            "You can no longer submit this assignment as the due date has passed.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else if (submission != null) {
+
                     }
                 }
             }

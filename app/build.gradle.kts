@@ -11,10 +11,10 @@ android {
 
     defaultConfig {
         applicationId = "com.buildingbadd.demojc"
-        minSdk = 32
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        minSdk = 28
+        targetSdk = 36
+        versionCode = 6
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

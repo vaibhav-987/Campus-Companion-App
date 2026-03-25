@@ -54,12 +54,12 @@ fun StudentAttendanceScreen(navController: NavHostController) {
             // Get class
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
-            val studentClass = studentDoc.getString("class")
+            val studentSemester = studentDoc.getString("currentSemesterId")
                 ?: throw Exception("Class missing")
 
             // Query attendance
             val snapshot = db.collection("attendance")
-                .whereEqualTo("class", studentClass)
+                .whereEqualTo("semesterId", studentSemester)
                 .get()
                 .await()
 
@@ -73,9 +73,9 @@ fun StudentAttendanceScreen(navController: NavHostController) {
 
                     list.add(
                         StudentAttendanceRecord(
-                            subjectName = doc.getString("subjectName") ?: "Unknown",
+                            subjectName = doc.getString("subjectId") ?: "Unknown",
                             date = doc.getString("date") ?: "",
-                            time = doc.getString("time") ?: "",
+                            time = doc.getString("startTime") ?: "",
                             isPresent = isPresent
                         )
                     )

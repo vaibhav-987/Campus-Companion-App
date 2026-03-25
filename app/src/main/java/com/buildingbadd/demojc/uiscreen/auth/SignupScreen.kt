@@ -520,23 +520,19 @@ fun calculateSemesterId(
     studentClass: String,
     signupDate: LocalDate = LocalDate.now()
 ): String {
-
     val month = signupDate.monthValue
     val day = signupDate.dayOfMonth
 
-    val isSemOdd =
-        (month in 6..10) || (month == 11 && day < 15)
+    // Odd Sem: June 1st to Nov 15th
+    val isSemOdd = (month in 6..10) || (month == 11 && day <= 15)
 
-    return when (studentClass) {
-        "FYBSCIT", "FYBCOM" ->
-            if (isSemOdd) "${courseId}_SEM_1" else "${courseId}_SEM_2"
+    // Clean the input to avoid case-sensitivity issues
+    val normalizedClass = studentClass.uppercase().trim()
 
-        "SYBSCIT", "SYBCOM" ->
-            if (isSemOdd) "${courseId}_SEM_3" else "${courseId}_SEM_4"
-
-        "TYBSCIT", "TYBCOM" ->
-            if (isSemOdd) "${courseId}_SEM_5" else "${courseId}_SEM_6"
-
+    return when (normalizedClass) {
+        "FY" -> if (isSemOdd) "${courseId}_SEM_1" else "${courseId}_SEM_2"
+        "SY"-> if (isSemOdd) "${courseId}_SEM_3" else "${courseId}_SEM_4"
+        "TY" -> if (isSemOdd) "${courseId}_SEM_5" else "${courseId}_SEM_6"
         else -> ""
     }
 }

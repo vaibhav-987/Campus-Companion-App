@@ -42,10 +42,10 @@ fun StudentAttendanceHistoryScreen(
 
             val studentDoc =
                 db.collection("students_detail").document(enrollmentId).get().await()
-            val studentClass = studentDoc.getString("class") ?: return@LaunchedEffect
+            val studentSemester = studentDoc.getString("currentSemesterId") ?: return@LaunchedEffect
 
             val snapshot = db.collection("attendance")
-                .whereEqualTo("class", studentClass)
+                .whereEqualTo("semesterId", studentSemester)
                 .whereEqualTo("subjectId", subjectId)
                 .get()
                 .await()

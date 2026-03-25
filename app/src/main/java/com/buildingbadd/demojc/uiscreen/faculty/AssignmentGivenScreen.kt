@@ -48,6 +48,7 @@ fun AssignmentGivenScreen(navController: NavHostController) {
                 description = doc.getString("description") ?: "",
                 subjectId = doc.getString("subjectId") ?: "",
                 subjectName = doc.getString("subjectName") ?: "",
+                semesterId = doc.getString("semesterId") ?: "",
                 className = doc.getString("class") ?: "",
                 dueDate = doc.getString("dueDate") ?: "",
                 attachmentName = doc.getString("attachmentName"),
@@ -56,7 +57,7 @@ fun AssignmentGivenScreen(navController: NavHostController) {
 
             // 🔹 total students of class
             val totalStudents = db.collection("students_detail")
-                .whereEqualTo("class", assignment.className)
+                .whereEqualTo("currentSemesterId", assignment.semesterId)
                 .get()
                 .await()
                 .size()

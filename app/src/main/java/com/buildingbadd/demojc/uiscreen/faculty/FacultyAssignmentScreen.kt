@@ -63,6 +63,7 @@ fun FacultyAssignmentsScreen(navController: NavHostController) {
                 subjectName = doc.getString("subjectName") ?: "",
                 className = doc.getString("class") ?: "",
                 dueDate = doc.getString("dueDate") ?: "",
+                semesterId = doc.getString("semesterId") ?: "",
                 attachmentName = doc.getString("attachmentName"),
                 attachmentUrl = doc.getString("attachmentUrl")
             )

@@ -8,7 +8,7 @@ data class Assignment(
     val subjectName: String,
     val className: String,
     val dueDate: String,
+    val semesterId: String,
     val attachmentName: String?,
     val attachmentUrl: String?
 )
-

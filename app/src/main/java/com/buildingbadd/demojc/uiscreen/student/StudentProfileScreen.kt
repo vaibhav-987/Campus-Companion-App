@@ -107,7 +107,7 @@ fun StudentProfileScreen(navController: NavHostController) {
 
         attendancePercent = calculateAttendancePercentage(
             enrollmentId = enrollmentId,
-            studentClass = studentDoc.getString("class") ?: "",
+            //studentSemester = studentDoc.getString("class") ?: "",
             currentSemesterId = studentDoc.getString("currentSemesterId") ?: ""
         )
     }
@@ -558,7 +558,7 @@ fun uploadProfilePhoto(
 
 suspend fun calculateAttendancePercentage(
     enrollmentId: String,
-    studentClass: String,
+    //studentSemester: String,
     currentSemesterId: String
 ): Int {
 
@@ -576,7 +576,7 @@ suspend fun calculateAttendancePercentage(
     if (subjectIds.isEmpty()) return 0
 
     val attendanceSnapshot = db.collection("attendance")
-        .whereEqualTo("class", studentClass)
+       // .whereEqualTo("semesterId", studentSemester)
         .whereIn("subjectId", subjectIds)
         .get()
         .await()

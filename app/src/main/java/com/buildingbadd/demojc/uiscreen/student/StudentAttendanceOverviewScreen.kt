@@ -63,7 +63,7 @@ fun StudentAttendanceOverviewScreen(
                 // Fetch attendance for subject
                 val attendanceSnapshot =
                     db.collection("attendance")
-                        .whereEqualTo("class", studentClass)
+                        .whereEqualTo("semesterId", semesterId)
                         .whereEqualTo("subjectId", subjectId)
                         .get()
                         .await()
